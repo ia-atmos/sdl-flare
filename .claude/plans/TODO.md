@@ -40,8 +40,10 @@ the whole conversation.
 
 ## B. Known work, not done
 
-3. F5, left: the game over screen; combat text; the powers of types
-   transform and block (the hero's).
+3. (F5 closed: its logic matches on the 30 runs.) Moved to F6: the game
+   over menu (continue: teleport to the respawn map, the death penalty
+   of the inventory), the combat text, and the powers of types transform
+   and block (only the hero's).
 4. F6: items and inventory, the HUD and menus of the slice, loot picked
    up; on screen: the loot on the ground (`loot_animation` of items),
    the layers of the hero (equipment), NPCs (the captured trader of
@@ -55,7 +57,6 @@ the whole conversation.
    from the animation sets of `anim.cache`: to find the cycle.
 8. `await(n, :e)` of the compiler may replace the task `Frames` and the
    frame counters of the port.
-9. Mark F5 done in the README when it closes.
 
 10a. To come: move the platform part of the layer (window, images,
     fonts, sounds, input, the test mode of `engine/flare.h` and
@@ -83,6 +84,9 @@ the whole conversation.
 14. The golden output of the runs was committed corrupted once (two
     writers at the same time) and restored in `fe3e438`; the suite and
     its update are now run one after the other.
+
+14a. F5 was closed with the game over menu and the combat text moved
+     to F6 (they are of the HUD and the menus).
 
 ## D. Older
 

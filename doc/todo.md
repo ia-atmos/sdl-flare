@@ -3,7 +3,7 @@
 The milestones are in the README; this is the working list of the one
 in course, with what was found in the original along the way.
 
-## F5: enemies, powers, hazards, effects
+## F5: enemies, powers, hazards, effects (closed)
 
 Target runs: `hero-cave` (enemies standing while the hero walks), then
 `fight` (an antlion fights the hero to its death). Both are stored in

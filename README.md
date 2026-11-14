@@ -70,13 +70,14 @@ In respect of the
       first map (`tools/compare.sh`). The path finding is used only by
       enemies and by moving with the mouse: it comes with the enemies, in
       F5.
-- [ ] F5 (in course): enemies (`src/ai.atm`, `src/enemy.atm`), powers
+- [x] F5: enemies (`src/ai.atm`, `src/enemy.atm`), powers
       (`src/power.atm`), hazards and hits (`src/combat.atm`), effects
       (`src/effect.atm`), loot (`src/loot.atm`), path finding
       (`engine/astar.h`). 30 scripted runs (walks, a fight, duels and
       stands in 13 maps) give the same trace as the original, with its
       draws; enemies and hazards are drawn with the same pixels
-      (`tools/compare-shot.sh`).
+      (`tools/compare-shot.sh`). The game over menu (with the respawn
+      and the death penalty) and the combat text are of the HUD: F6.
 
 ## Tests
 
