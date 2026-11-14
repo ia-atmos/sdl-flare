@@ -129,8 +129,8 @@ func play.actions (h) {
 
 ;; the hidden draws of a map loaded (EntityManager::handleNewMap): a
 ;; Map_Enemy, and getRandomNeighbor of the tiles around the hero
-func play.new_map_draws (x, y, skip) {
-    if !skip {
+func play.new_map_draws (x, y, no_enemy) {
+    if !no_enemy {
         fl.rand()
     }
     var n = 0
