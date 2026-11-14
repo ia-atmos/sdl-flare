@@ -45,8 +45,9 @@ the whole conversation.
    of the inventory), the combat text, and the powers of types transform
    and block (only the hero's).
 4. F6: items and inventory, the HUD and menus of the slice, loot picked
-   up; on screen: the loot on the ground (`loot_animation` of items),
-   the layers of the hero (equipment), NPCs (the captured trader of
+   up, the loot of events (chests: `checkMapForLoot`, not executed yet),
+   the automatic pickup of currency; on screen (the loot on the ground
+   is drawn since 2026-11-14): the layers of the hero (equipment), NPCs (the captured trader of
    `cave1`), the animations of effects on entities (shield, heal).
 5. F7: the alpha demo played by script, end to end; the benchmark of the
    port against `doc/bench.md` (no number of the port is measured yet);
