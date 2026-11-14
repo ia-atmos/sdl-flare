@@ -11,7 +11,40 @@ val loot = [
     drop_max = 1,       ;; of engine/loot.txt
     drop_radius = 1,
     currency = 10,      ;; currency_id of engine/misc.txt
+    ground = [],        ;; the stacks on the map: [id, q, x, y, cur, on_ground]
 ]
+
+;; LootManager::addLoot: a stack on the map, aligned to 1/16 of a tile,
+;; merged with a stack of the same item at the same place, or with the
+;; animation of its item for its quantity
+func loot_add (id, q, x, y) {
+    val ax = fl.f32(math.floor(fl.f32(x) / 0.0625) * 0.0625)
+    val ay = fl.f32(math.floor(fl.f32(y) / 0.0625) * 0.0625)
+    var i = #loot.ground
+    loop {
+        while i > 0
+        set i -= 1
+        val g = loot.ground@i
+        if (g.id == id) && (g.x == ax) && (g.y == ay) {
+            set g.q = g.q + q
+            return nil
+        }
+    }
+    val it = item.get(id)
+    val g = [id = id, q = q, x = ax, y = ay, cur = nil, on_ground = true]
+    if it && (#it.loot_animation > 0) {
+        var la = it.loot_animation@(#it.loot_animation - 1)
+        loop _, a in it.loot_animation {
+            if (q >= a.low) && ((q <= a.high) || (a.high == 0)) {
+                set la = a
+                break
+            }
+        }
+        set g.cur = anim.cursor(anim.get(anim.load(la.name), ""))
+        set g.on_ground = false
+    }
+    set loot.ground@+ = g
+}
 
 func loot_entry (id, chance, l, k) {
     val qmin = math.max(parse.int(l@k), 1)
@@ -102,6 +135,7 @@ func loot_drop (e, x, y, hero) {
     }
     val q = rand_between(e.qmin, e.qmax)
     fl.trace(string.format("loot %d %d %.9g %.9g", e.id, q, fl.f32(px), fl.f32(py)))
+    loot_add(e.id, q, px, py)
 }
 
 ;; LootManager::checkLoot
@@ -151,6 +185,15 @@ func loot_dropping (e) {
 
 ;; LootManager::checkEnemiesForLoot, once per frame after the hazards
 func loot.logic (hero) {
+    ;; the flying stacks animate, until they land
+    loop _, g in loot.ground {
+        if g.cur {
+            anim.advance(g.cur)
+            if !g.on_ground && (if g.cur.a.default_active => anim.is_second_last(g.cur) => anim.is_active(g.cur)) {
+                set g.on_ground = true
+            }
+        }
+    }
     loop _, en in loot.dropping {
         if #en.loot > 0 {
             val n = if en.loot_count@1 != 0 => rand_between(en.loot_count@0, en.loot_count@1) => rand_between(1, loot.drop_max)

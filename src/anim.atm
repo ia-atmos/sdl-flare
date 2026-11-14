@@ -421,6 +421,10 @@ func anim.is_last (c) {
     c.sub == c.a.last@(c.a.total - 1)
 }
 
+func anim.is_second_last (c) {
+    c.sub == c.a.last@(c.a.total - 2)
+}
+
 ;; the frame (of the file) of the cursor
 func anim_cur (c) {
     if #c.a.sub == 0 => 0 => c.a.sub@(c.sub)

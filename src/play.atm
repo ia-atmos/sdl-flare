@@ -229,6 +229,7 @@ task MapRun (path, pos, h) {
     }
     play.new_map_draws(p@0, p@1, true)
     set combat.list = []
+    set loot.ground = []
     set play.seen = nil
     set play.seen_es = []
     fl.col_block(hp.x, hp.y, false)
@@ -250,6 +251,15 @@ task MapRun (path, pos, h) {
                 val g = anim.gfx(e.cur.a, e.cur.sub, e.dir)
                 if g && !gone && !fl.col_outside(e.x, e.y) {
                     fl.ren(e.corpse, g@0, g@1, g@2, g@3, g@4, g@5, g@6, e.x, e.y, 1, false)
+                }
+            }
+            ;; LootManager::addRenders: below the objects when landed
+            loop _, lg in loot.ground {
+                if lg.cur && !fl.col_outside(lg.x, lg.y) {
+                    val g = anim.gfx(lg.cur.a, lg.cur.sub, 0)
+                    if g {
+                        fl.ren(anim.is_last(lg.cur), g@0, g@1, g@2, g@3, g@4, g@5, g@6, lg.x, lg.y, 0, false)
+                    }
                 }
             }
             loop _, hz in combat.list {
