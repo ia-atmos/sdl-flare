@@ -1,0 +1,47 @@
+;; Items: `items/items.txt` as ItemManager::loadItems reads it.
+;;
+;;      item.init()         loads the items
+;;      item.get(id)        an item, or nil
+;;
+;; An item has the fields that the port uses so far: its id, and its loot
+;; animations, [name, low, high] by quantity (`loot_animation`). An item
+;; read again (in a later mod) clears its list at its first
+;; `loot_animation`, as the original.
+
+val item = [
+    all = [],       ;; id -> item
+]
+
+func item.init () {
+    var it = nil
+    var clear_anim = false
+    loop _, s in ini.load("items/items.txt") || [] {
+        loop _, kv in s.keys {
+            val k, v = kv@0, kv@1
+            ifs {
+                k == "id" => {
+                    val id = parse.int(v)
+                    if item.all@id {
+                        set clear_anim = true
+                    } else {
+                        set item.all@id = [id = id, loot_animation = []]
+                    }
+                    set it = item.all@id
+                }
+                it == nil => nil
+                k == "loot_animation" => {
+                    if clear_anim {
+                        set it.loot_animation = []
+                        set clear_anim = false
+                    }
+                    val l = parse.list(v)
+                    set it.loot_animation@+ = [name = l@0, low = parse.int(l@1 || ""), high = parse.int(l@2 || "")]
+                }
+            }
+        }
+    }
+}
+
+func item.get (id) {
+    item.all@id
+}
