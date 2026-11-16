@@ -89,6 +89,12 @@ the whole conversation.
 14a. F5 was closed with the game over menu and the combat text moved
      to F6 (they are of the HUD and the menus).
 
+14b. The migration to the new rules of pin (2026-11-16) is done:
+     identical traces, pixels, and dumps; the report went to the session
+     of the compiler. Entities that modules kept are now ids or copies
+     (hazard sources, summoners, the last enemy hit, the loot of a dead
+     enemy, the enemy under the mouse): a weak reference would undo it.
+
 ## D. Older
 
 15. The permission to install packages (SDL2 development files, `time`)
