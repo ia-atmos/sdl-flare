@@ -1,0 +1,7 @@
+# env: FLARE_MAP=maps/goblin_warrens.txt FLARE_POS=16.5,19.5 FLARE_FRAMES=500 FLARE_RNG=1 FLARE_DUMP=1
+# kill the first enemy of the map, then walk up onto its gold: the pickup
+20 move 853 380
+20 down 1
+290 up 1
+320 key W
+350 keyup W

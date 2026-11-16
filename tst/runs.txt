@@ -30,3 +30,4 @@ duel-ydrakka_pass
 stand-ice_hall
 stand-cave_goblins
 stand-cave_minotaur
+pickup-goblin_warrens
