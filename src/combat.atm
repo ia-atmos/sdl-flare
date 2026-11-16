@@ -14,7 +14,7 @@
 pin combat = [
     hazards = nil,      ;; the pool of hazards of the map
     list = nil,         ;; the hazards in order of creation
-    last_enemy = nil,   ;; the enemy of the last hit (HazardManager::last_enemy)
+    last_enemy = nil,   ;; the id of the enemy of the last hit (HazardManager::last_enemy)
     new = [],           ;; hazards made in this frame (PowerManager::hazards)
 ]
 
@@ -157,10 +157,11 @@ func power_activate (id, src, ox, oy, tx0, ty0) {
             if pw.use_hazard {
                 var delay = 0
                 loop _ in pw.count {
-                    pin hz = hazard_new(id, pw, src, ox, oy, tx, ty)
+                    ;; created in the queue of the module, which owns it
+                    set combat.new@+ = hazard_new(id, pw, src, ox, oy, tx, ty)
+                    val hz = combat.new@(#combat.new - 1)
                     set hz.delay = delay
                     set delay += pw.delay
-                    set combat.new@+ = hz
                 }
             }
             power_buff(id, pw, src, tx, ty)
@@ -172,7 +173,9 @@ func power_activate (id, src, ox, oy, tx0, ty0) {
             val theta = fl.theta(sx, sy, tx, ty)
             var delay = 0
             loop i in pw.count {
-                val hz = hazard_new(id, pw, src, ox, oy, tx, ty)
+                ;; created in the queue of the module, which owns it
+                set combat.new@+ = hazard_new(id, pw, src, ox, oy, tx, ty)
+                val hz = combat.new@(#combat.new - 1)
                 val cnt, ang = pw.count, pw.missile_angle
                 val off = `:number.float (double)(((1.0f - (float)a_dbl($cnt)) / 2 + (float)a_dbl($i)) * ((float)a_dbl($ang) * (float)M_PI / 180.0f))`
                 var variance = 0.0
@@ -187,7 +190,6 @@ func power_activate (id, src, ox, oy, tx0, ty0) {
                 }
                 set hz.delay = delay
                 set delay += pw.delay
-                set combat.new@+ = hz
             }
             true
         }
@@ -218,13 +220,14 @@ func power_activate (id, src, ox, oy, tx0, ty0) {
                 set lx, ly = fl.f32(lx + vx), fl.f32(ly + vy)
                 val wall = !fl.col_valid(lx, ly, MOVE.FLYING, COLLIDE.HAZARD)
                 until wall && (i > 0)
-                val hz = hazard_new(id, pw, src, ox, oy, tx, ty)
+                ;; created in the queue of the module, which owns it
+                set combat.new@+ = hazard_new(id, pw, src, ox, oy, tx, ty)
+                val hz = combat.new@(#combat.new - 1)
                 set hz.x, hz.y = lx, ly
                 set hz.delay = delay
                 set delay += pw.delay
                 set hit = hit || hz.hit
                 set hz.hit = hit
-                set combat.new@+ = hz
                 until wall
             }
             true
@@ -379,7 +382,7 @@ func take_hit (t, hz, src) {
         set t.next = if t.hero => [act = HDead] => [act = if critdie => "critdead" => "dead"]
         if !t.hero {
             fl.col_unblock(t.x, t.y)
-            set loot.dropping@+ = t
+            loot_dropping(t)
         }
     }
     ;; a hit breaks a stun; then the effects of the power, and its post powers
@@ -422,26 +425,6 @@ func take_hit (t, hz, src) {
         }
     }
     true
-}
-
-;; the source of a hazard, by its id: the hero, an enemy, or the StatBlock
-;; of an event (the hazards are kept by the module, which may not hold the
-;; entities of a map)
-func combat_src (hz, ens, hero) {
-    if hz.src_id == 0 {
-        return hero
-    }
-    loop _, t in ens {
-        if t.pub.id == hz.src_id {
-            return t.pub
-        }
-    }
-    loop _, ev in play.events {
-        if ev.stats && (ev.stats.id == hz.src_id) {
-            return ev.stats
-        }
-    }
-    nil
 }
 
 ;; HazardManager::logic, once per frame after the enemies
@@ -505,7 +488,7 @@ func hazards_logic (ens, hero) {
                         set hz.hit@+ = e.id
                         val hit = take_hit(e, hz, combat_src(hz, ens, hero))
                         if !hz.power.beacon {
-                            set combat.last_enemy = e
+                            set combat.last_enemy = e.id
                         }
                         if hit && !hz.power.multitarget {
                             set hz.active = false

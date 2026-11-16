@@ -377,8 +377,8 @@ func ai_check_move (e, hero_st) {
             set e.x, e.y = fl.f32(w@0), fl.f32(w@1)
             set e.turn_timer.cur = 0
             vector.remove(e.waypoints, 0)
-            val nw = if e.wander => ai_wander_point(e) => w
-            set e.waypoints@+ = nw
+            ;; a new point, or the same one again (as a copy: always fresh)
+            set e.waypoints@+ = if e.wander => ai_wander_point(e) => [w@0, w@1]
             timer_begin(e.waypoint_timer)
         }
     }

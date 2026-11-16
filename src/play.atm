@@ -84,7 +84,11 @@ func play.bounds (e) {
 func play.focus (h, ens) {
     var enemy = nil
     if combat.last_enemy {
-        set enemy = combat.last_enemy
+        loop _, t in ens {
+            if t.pub.id == combat.last_enemy {
+                set enemy = t.pub
+            }
+        }
         set combat.last_enemy = nil
     } else {
         val mx, my = fl.mouse()
@@ -103,7 +107,9 @@ func play.focus (h, ens) {
             }
         }
     }
-    set h.cursor_enemy = enemy
+    ;; its position (the hero is outer to the enemies of a map, and nothing
+    ;; moves them before the hero aims in this frame)
+    set h.cursor_enemy = if enemy => [enemy.x, enemy.y] => nil
 }
 
 ;; MenuActionBar::checkAction, for the main buttons of the mouse: the power
@@ -164,6 +170,26 @@ func play_spawn_request (sp) {
     if play.world {
         set play.world.spawns@+ = sp
     }
+}
+
+;; the source of a hazard, by its id: the hero, an enemy, or the StatBlock
+;; of an event (the hazards are kept by the module, which may not hold the
+;; entities of a map)
+func combat_src (hz, ens, hero) {
+    if hz.src_id == 0 {
+        return hero
+    }
+    loop _, t in ens {
+        if t.pub.id == hz.src_id {
+            return t.pub
+        }
+    }
+    loop _, ev in play.events {
+        if ev.stats && (ev.stats.id == hz.src_id) {
+            return ev.stats
+        }
+    }
+    nil
 }
 
 ;; MapRenderer::checkEvents at the hero, from the frame of the hero

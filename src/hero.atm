@@ -264,7 +264,7 @@ task HPower (h, turning) {
         if anim.is_first(h.cur) {
             ;; Avatar::beginPower
             if h.cursor_enemy {
-                set tx, ty = h.cursor_enemy.x, h.cursor_enemy.y
+                set tx, ty = h.cursor_enemy@0, h.cursor_enemy@1
             }
             if pw.face {
                 set h.dir = fl.direction(h.x, h.y, tx, ty)
