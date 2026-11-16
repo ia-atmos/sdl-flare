@@ -12,6 +12,8 @@ pin loot = [
     drop_radius = 1,
     currency = 10,      ;; currency_id of engine/misc.txt
     ground = [],        ;; the stacks on the map: [id, q, x, y, cur, on_ground]
+    autopickup_currency = false,    ;; of engine/loot.txt
+    autopickup_range = 1.0,
 ]
 
 ;; LootManager::addLoot: a stack on the map, aligned to 1/16 of a tile,
@@ -81,6 +83,8 @@ func loot.init () {
             match kv@0 {
                 "drop_max" => { set loot.drop_max = parse.int(kv@1) }
                 "drop_radius" => { set loot.drop_radius = parse.int(kv@1) }
+                "autopickup_currency" => { set loot.autopickup_currency = parse.bool(kv@1) }
+                "autopickup_range" => { set loot.autopickup_range = parse.float(kv@1) }
             }
         }
     }
@@ -177,6 +181,31 @@ func loot_check (list, x, y, hero) {
             set e.max_drops = e.max_drops - 1
         }
     }
+}
+
+;; Loot::isFlying
+func loot_flying (g) {
+    g.cur && !anim.is_last(g.cur) && (g.cur.times == 0)
+}
+
+;; LootManager::checkAutoPickup, with auto_loot on (the default): the last
+;; stack of currency near the hero, landed, leaves the ground (the alpha
+;; demo has no item type with auto_pickup); its item and quantity, or nil
+func loot.autopickup (hero) {
+    var i = #loot.ground
+    loop {
+        while i > 0
+        set i -= 1
+        val g = loot.ground@i
+        if (fl.dist(hero.x, hero.y, g.x, g.y) < loot.autopickup_range) && !loot_flying(g) {
+            if (g.id == loot.currency) && loot.autopickup_currency {
+                val id, q = g.id, g.q
+                vector.remove(loot.ground, i)
+                return id, q
+            }
+        }
+    }
+    nil
 }
 
 ;; LootManager::addEnemyLoot

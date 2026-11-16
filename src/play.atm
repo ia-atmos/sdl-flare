@@ -306,6 +306,14 @@ task MapRun (path, pos, h) {
     }
 
     loop on :frame {
+        ;; GameStatePlay::checkLoot: currency picked up goes to the hero
+        if hp.hp > 0 {
+            val id, q = loot.autopickup(hp)
+            if id != nil {
+                fl.trace(string.format("pickup %d %d", id, q))
+                set hp.currency = (hp.currency || 0) + q
+            }
+        }
         if hp.hp > 0 {
             event.hotspots(play.events, w, hp)
         }
