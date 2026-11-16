@@ -218,11 +218,11 @@ func anim.load (path) {
                         }
                     }
                     "render_size" => {
-                        val l = parse.list(v)
+                        pin l = parse.list(v)
                         set cfg.size = [parse.int(l@0), parse.int(l@1)]
                     }
                     "render_offset" => {
-                        val l = parse.list(v)
+                        pin l = parse.list(v)
                         set cfg.offset = [parse.int(l@0), parse.int(l@1)]
                     }
                     "blend_mode" => {

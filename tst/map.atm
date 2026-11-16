@@ -9,9 +9,9 @@ include "../src/map.atm"
 val dir = os.getenv("FLARE_DATA")
 ini.set_mods(dir, ini.resolve(dir, ["alpha_demo"]))
 
-val m = map.load(os.getenv("FLARE_MAP") || "maps/frontier_outpost.txt")
+pin m = map.load(os.getenv("FLARE_MAP") || "maps/frontier_outpost.txt")
 val pos = if os.getenv("FLARE_POS") {
-    val l = parse.list(os.getenv("FLARE_POS"))
+    pin l = parse.list(os.getenv("FLARE_POS"))
     [parse.float(l@0), parse.float(l@1)]
 } else {
     m.hero

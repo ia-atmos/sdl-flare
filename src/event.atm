@@ -171,8 +171,7 @@ func event.execute (ev, w, h) {
     }
     if (ev.delay.dur > 0) && !w.skip_delay {
         timer_begin(ev.delay)
-        val copy = X.copy(ev)
-        set w.delayed@+ = copy
+        set w.delayed@+ = X.copy(ev)
         timer_begin(ev.cooldown)
         return !ev.keep
     }
