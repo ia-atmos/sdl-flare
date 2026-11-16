@@ -35,8 +35,12 @@ loop path in io.lines(list) {
             print(string.format("blend %d %d %d,%d,%d", a.blend, a.alpha,
                 (a.color >> 16) & 0xFF, (a.color >> 8) & 0xFF, a.color & 0xFF))
             loop i in DIRECTIONS * a.frames {
-                val g = a.gfx@i || [0, 0, 0, 0, 0, 0, 0, ""]
-                print(string.format("gfx %d %d %d %d %d %d %d %s", i, g@1, g@2, g@3, g@4, g@5, g@6, g@7))
+                val g = a.gfx@i
+                if g {
+                    print(string.format("gfx %d %d %d %d %d %d %d %s", i, g@1, g@2, g@3, g@4, g@5, g@6, g@7))
+                } else {
+                    print(string.format("gfx %d 0 0 0 0 0 0 ", i))
+                }
             }
         }
     }

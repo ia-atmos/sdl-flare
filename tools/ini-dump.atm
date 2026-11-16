@@ -15,7 +15,7 @@ ini.set_mods(dir, string.split(mods, ","))
 loop path in io.lines(list) {
     if #path > 0 {
         print("file " ++ path)
-        val secs = ini.load(path)
+        pin secs = ini.load(path)
         if secs == nil {
             print("none")
         } else {
