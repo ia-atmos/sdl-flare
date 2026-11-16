@@ -224,10 +224,18 @@ index 93c1e6a9..b7255837 100644
  	MapRenderer::MapLoot *map_loot = NULL;
  
 diff --git a/src/GameStatePlay.cpp b/src/GameStatePlay.cpp
-index 51044186..b30b43bb 100644
+index 51044186..39dbca39 100644
 --- a/src/GameStatePlay.cpp
 +++ b/src/GameStatePlay.cpp
-@@ -833,6 +833,63 @@ void GameStatePlay::updateActionBar(unsigned index) {
+@@ -280,6 +280,7 @@ void GameStatePlay::checkLoot() {
+ 	}
+ 
+ 	if (!pickup.empty()) {
++		BENCH_T("pickup %d %d", static_cast<int>(pickup.item), pickup.quantity);
+ 		menu->inv->add(pickup, MenuInventory::CARRIED, ItemStorage::NO_SLOT, MenuInventory::ADD_PLAY_SOUND, MenuInventory::ADD_AUTO_EQUIP);
+ 		if (items->isValid(pickup.item)) {
+ 			std::vector<EventComponent>& pickup_status = items->items[pickup.item]->pickup_status_list;
+@@ -833,6 +834,63 @@ void GameStatePlay::updateActionBar(unsigned index) {
  	}
  }
  
@@ -291,7 +299,7 @@ index 51044186..b30b43bb 100644
  /**
   * Process all actions for a single frame
   * This includes some message passing between child object
-@@ -905,6 +962,8 @@ void GameStatePlay::logic() {
+@@ -905,6 +963,8 @@ void GameStatePlay::logic() {
  	mapr->enemies_cleared = entitym->isCleared();
  	quests->logic();
  
@@ -300,7 +308,7 @@ index 51044186..b30b43bb 100644
  	pc->checkTransform();
  
  	// change hero powers on transformation
-@@ -1013,7 +1072,14 @@ void GameStatePlay::render() {
+@@ -1013,7 +1073,14 @@ void GameStatePlay::render() {
  	std::vector<Renderable> rens;
  	std::vector<Renderable> rens_dead;
  
@@ -316,7 +324,7 @@ index 51044186..b30b43bb 100644
  
  	entitym->addRenders(rens, rens_dead);
  
-@@ -1027,6 +1093,10 @@ void GameStatePlay::render() {
+@@ -1027,6 +1094,10 @@ void GameStatePlay::render() {
  	// render the static map layers plus the renderables
  	mapr->render(rens, rens_dead);
  
