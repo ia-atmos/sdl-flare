@@ -9,7 +9,7 @@
 ;;      the tiles, the camera       mapr->logic()
 ;;      the trace                   benchTrace()
 
-val play = [
+pin play = [
     world = nil,        ;; the world of the current map (see play_world)
     events = [],        ;; the events of the current map
     seen = nil,         ;; what the trace saw in the last frame: the hero
@@ -92,7 +92,7 @@ func play.focus (h, ens) {
         loop _, t in ens {
             val e = t.pub
             if (e.state != STATE.DEAD) && (e.state != STATE.CRITDEAD) {
-                val r = play.bounds(e)
+                pin r = play.bounds(e)
                 if (mx >= r@0) && (my >= r@1) && (mx < (r@0 + r@2)) && (my < (r@1 + r@3)) {
                     val d = fl.dist(mx, my, fl.f32(r@0 + (r@2 / 2)), fl.f32(r@1 + (r@3 / 2)))
                     if (best == nil) || (d < best) {
@@ -169,13 +169,13 @@ func play_spawn_request (sp) {
 ;; MapRenderer::checkEvents at the hero, from the frame of the hero
 func play_check_events (h) {
     if play.world {
-        event.check(play.events, h.x, h.y, play.world)
+        event.check(play.events, h.x, h.y, play.world, h)
     }
 }
 
 ;; The world of a map: what its events and its entities request in a frame
-func play_world (h) {
-    [hero = h, teleport = nil, spawns = [], powers = [], delayed = [],
+func play_world () {
+    [teleport = nil, spawns = [], powers = [], delayed = [],
      skip_delay = false, cleared = false]
 }
 
@@ -189,9 +189,14 @@ func play_spawns (w, es, ens) {
             val t = spawn @es Enemy(enemy.stats(el.type),
                 [type = el.type, x = sp.x, y = sp.y, dir = sp.dir, wander = 0, waypoints = [], state = "spawn"])
                 set ens@+ = t
-            if sp.summoner {
-                set sp.summoner.summons = sp.summoner.summons || []
-                set sp.summoner.summons@+ = t.pub
+            ;; the summoner, by its id (the world of the module holds no
+            ;; entity): its summons die with it
+            loop _, st in ens {
+                val s = st.pub
+                if (sp.summoner != nil) && (s.id == sp.summoner) {
+                    set s.summons = s.summons || []
+                    set s.summons@+ = t.pub
+                }
             }
             fl.col_block(sp.x, sp.y, false)
         }
@@ -204,20 +209,20 @@ func play_spawns (w, es, ens) {
 task MapRun (path, pos, h) {
     val hp = h.pub
     fl.trace("map " ++ path)
-    val m = map.load(path)
+    pin m = map.load(path)
     set play.next_id = 1
     val p = pos || m.hero
     set hp.x, hp.y = fl.f32(p@0), fl.f32(p@1)
     set hp.camera_lock = true
     fl.cam_warp(hp.x, hp.y)
     ;; Map::load: the events, with a StatBlock for those with a power
-    val w = play_world(hp)
-    set play.world = w
+    set play.world = play_world()
+    val w = play.world
     set play.events = event.load(m)
     ;; MapRenderer::load: the groups of enemies
-    val placed = enemy.place(enemy.groups(m))
+    pin placed = enemy.place(enemy.groups(m))
     ;; the events on load
-    event.on_load(play.events, w)
+    event.on_load(play.events, w, hp)
     ;; EntityManager::handleNewMap: its Map_Enemy, the enemies, the neighbor
     fl.rand()
     pin es = tasks()
@@ -235,7 +240,7 @@ task MapRun (path, pos, h) {
     fl.col_block(hp.x, hp.y, false)
 
     ;; the rest of the frame of the load
-    event.logic(play.events, w)
+    event.logic(play.events, w, hp)
     fl.tset_logic()
     fl.cam_logic()
     play.trace(hp, ens)
@@ -276,7 +281,7 @@ task MapRun (path, pos, h) {
 
     loop on :frame {
         if hp.hp > 0 {
-            event.hotspots(play.events, w)
+            event.hotspots(play.events, w, hp)
         }
         play.focus(hp, ens)
         play.actions(hp)
@@ -303,7 +308,7 @@ task MapRun (path, pos, h) {
                 set w.cleared = false
             }
         }
-        event.logic(play.events, w)
+        event.logic(play.events, w, hp)
         fl.tset_logic()
         fl.cam_logic()
         play.trace(hp, ens)
@@ -313,7 +318,7 @@ task MapRun (path, pos, h) {
 ;; A new game in a map, at a position (or at the hero of the map), then the
 ;; maps it teleports to.
 task Play (path, pos, class) {
-    val st = hero.stats(class)
+    pin st = hero.stats(class)
     hero.load_sfx("male")
     hero.load_steps(st.sfx_step)
 
@@ -326,9 +331,10 @@ task Play (path, pos, class) {
     pin h = spawn Hero(st, pos || [0, 0])
 
     spawn {
-        var next = [map = path, pos = pos]
+        ;; the next map (a variable does not own a table)
+        pin st = [next = [map = path, pos = pos]]
         loop {
-            set next = await MapRun(next.map, next.pos, h)
+            set st.next = await MapRun(st.next.map, st.next.pos, h)
         }
     }
 

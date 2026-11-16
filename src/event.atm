@@ -2,7 +2,7 @@
 ;; original loads and executes them, and the statuses of the campaign.
 ;;
 ;;      event.load(m)           the events of a map, in order
-;;      event.execute(ev, w)    EventManager::executeEvent: false if kept
+;;      event.execute(ev, w, h)    EventManager::executeEvent: false if kept
 ;;      event.check(evs, x, y, w)   MapRenderer::checkEvents at a position
 ;;      event.on_load(evs, w)   MapRenderer::executeOnLoadEvents
 ;;      event.logic(evs, w)     the cooldowns and delays (MapRenderer::logic)
@@ -11,18 +11,18 @@
 ;; spawn, the statuses. An event is data: what it does when its activation
 ;; comes is its list of components, in the order of the file.
 
-val event = []
+pin event = []
 
-val ACTIVATE = [on_trigger = 0, on_interact = 1, on_mapexit = 2, on_leave = 3,
+pin ACTIVATE = [on_trigger = 0, on_interact = 1, on_mapexit = 2, on_leave = 3,
                 on_load = 4, on_clear = 5, static = 6]
 
-val campaign = [
+pin campaign = [
     status = [],        ;; the statuses of the campaign that are set
 ]
 
 ;; the components of a key: a list makes several components of a type
 func event_components (ev, k, v) {
-    val l = parse.list(v)
+    pin l = parse.list(v)
     match k {
         "mapmod" => {
             var i = 0
@@ -48,11 +48,11 @@ func event_components (ev, k, v) {
         "requires_item" => { loop _, s in l { until s == "" ; set ev.comps@+ = [type = k, s = s] } }
         "remove_item" => { loop _, s in l { until s == "" ; set ev.comps@+ = [type = k, s = s] } }
         "loot" => {
-            val list = []
-            loot.parse(l, list)
-            loop _, e in list {
-                set e.type = "loot"
-                set ev.comps@+ = e
+            ;; parsed in place, into the components
+            val n = #ev.comps
+            loot.parse(l, ev.comps)
+            loop i in (n, #ev.comps - 1) {
+                set ev.comps@i.type = "loot"
             }
         }
         "intermap" => {
@@ -76,15 +76,17 @@ func event_components (ev, k, v) {
 
 ;; EventManager::loadEvent for each `[event]` of a map
 func event.load (m) {
-    val evs = []
+    pin evs = []
     loop _, s in m.secs {
         if s.name == "event" {
-            val ev = [type = "", activate = 0, loc = [0, 0, 0, 0], hotspot = [0, 0, 0, 0],
-                      center = [-1, -1], comps = [], keep = true,
-                      cooldown = timer(0), delay = timer(0), inside = false]
+            ;; built in place, owned by the list
+            set evs@+ = [type = "", activate = 0, loc = [0, 0, 0, 0], hotspot = [0, 0, 0, 0],
+                         center = [-1, -1], comps = [], keep = true,
+                         cooldown = timer(0), delay = timer(0), inside = false]
+            val ev = evs@(#evs - 1)
             loop _, kv in s.keys {
                 val k, v = kv@0, kv@1
-                val l = parse.list(v)
+                pin l = parse.list(v)
                 match k {
                     "type" => { set ev.type = v }
                     "activate" => {
@@ -106,11 +108,10 @@ func event.load (m) {
                     }
                     "cooldown" => { timer_set(ev.cooldown, parse.duration(v)) ; set ev.cooldown.cur = 0 }
                     "delay" => { timer_set(ev.delay, parse.duration(v)) ; set ev.delay.cur = 0 }
-                    "reachable_from" => { set ev.reachable = l }
+                    "reachable_from" => { set ev.reachable = parse.list(v) }
                     else => { event_components(ev, k, v) }
                 }
             }
-            set evs@+ = ev
         }
     }
     ;; Map::addEventStatBlock for the events with a power: the source of
@@ -159,7 +160,7 @@ func event_active (ev) {
 }
 
 ;; EventManager::executeEventInternal: false while the event is kept
-func event.execute (ev, w) {
+func event.execute (ev, w, h) {
     if !timer_end(ev.delay) || !timer_end(ev.cooldown) {
         return false
     }
@@ -209,7 +210,7 @@ func event.execute (ev, w) {
                 loop _, p in ev.comps {
                     if p.type == "power_path" {
                         if p.hero {
-                            set tx, ty = w.hero.x, w.hero.y
+                            set tx, ty = h.x, h.y
                         } else {
                             set tx, ty = p.tx + 0.5, p.ty + 0.5
                         }
@@ -223,7 +224,7 @@ func event.execute (ev, w) {
 }
 
 ;; MapRenderer::executeOnLoadEvents: on_load, then static, each in reverse
-func event.on_load (evs, w) {
+func event.on_load (evs, w, h) {
     loop _, act in [ACTIVATE.on_load, ACTIVATE.static] {
         var i = #evs
         loop {
@@ -231,7 +232,7 @@ func event.on_load (evs, w) {
             set i -= 1
             val ev = evs@i
             if event_active(ev) && (ev.activate == act) {
-                if event.execute(ev, w) {
+                if event.execute(ev, w, h) {
                     vector.remove(evs, i)
                 }
             }
@@ -240,7 +241,7 @@ func event.on_load (evs, w) {
 }
 
 ;; MapRenderer::checkEvents, in reverse
-func event.check (evs, x, y, w) {
+func event.check (evs, x, y, w, h) {
     val mx, my = math.floor(x), math.floor(y)
     var i = #evs
     loop {
@@ -252,10 +253,10 @@ func event.check (evs, x, y, w) {
                          (mx <= (ev.loc@0 + ev.loc@2 - 1)) && (my <= (ev.loc@1 + ev.loc@3 - 1))
             match ev.activate {
                 6 => {
-                    if event.execute(ev, w) { vector.remove(evs, i) }
+                    if event.execute(ev, w, h) { vector.remove(evs, i) }
                 }
                 5 => {
-                    if w.cleared && event.execute(ev, w) { vector.remove(evs, i) }
+                    if w.cleared && event.execute(ev, w, h) { vector.remove(evs, i) }
                 }
                 3 => {
                     if inside {
@@ -263,12 +264,12 @@ func event.check (evs, x, y, w) {
                     } else {
                         if ev.inside {
                             set ev.inside = false
-                            if event.execute(ev, w) { vector.remove(evs, i) }
+                            if event.execute(ev, w, h) { vector.remove(evs, i) }
                         }
                     }
                 }
                 0 => {
-                    if inside && event.execute(ev, w) { vector.remove(evs, i) }
+                    if inside && event.execute(ev, w, h) { vector.remove(evs, i) }
                 }
             }
         }
@@ -277,8 +278,7 @@ func event.check (evs, x, y, w) {
 
 ;; MapRenderer::checkHotspots, with the mouse: the first event (in reverse)
 ;; whose hotspot is under the mouse; a click on it, near the hero, runs it
-func event.hotspots (evs, w) {
-    val h = w.hero
+func event.hotspots (evs, w, h) {
     val mx, my = fl.mouse()
     var i = #evs
     loop {
@@ -303,7 +303,7 @@ func event.hotspots (evs, w) {
                         return nil
                     }
                     fl.lock(Input.MAIN1, true)
-                    if event.execute(ev, w) {
+                    if event.execute(ev, w, h) {
                         vector.remove(evs, i)
                     }
                 }
@@ -315,7 +315,7 @@ func event.hotspots (evs, w) {
 
 ;; MapRenderer::logic: the delays and cooldowns of the events, and the
 ;; delayed events that are due
-func event.logic (evs, w) {
+func event.logic (evs, w, h) {
     loop _, ev in evs {
         if !timer_end(ev.delay) {
             timer_tick(ev.delay)
@@ -331,7 +331,7 @@ func event.logic (evs, w) {
         timer_tick(ev.delay)
         if timer_end(ev.delay) {
             set w.skip_delay = true
-            event.execute(ev, w)
+            event.execute(ev, w, h)
             set w.skip_delay = false
             vector.remove(w.delayed, i)
         }

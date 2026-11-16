@@ -6,12 +6,12 @@
 ;; of their creation (as HazardManager::logic), with `:hazard.logic`.
 ;;
 ;;      power_activate(id, src, ox, oy, tx, ty)     PowerManager::activate
-;;      take_hit(target, hz)                Entity::takeHit: true on a hit
+;;      take_hit(target, hz, src)           Entity::takeHit: true on a hit
 ;;
 ;; A source or target is the `pub` of the hero or of an enemy: `id`, `x`,
 ;; `y`, `dir`, `hp`, `hero`, its stats in `base`, `melee_range`.
 
-val combat = [
+pin combat = [
     hazards = nil,      ;; the pool of hazards of the map
     list = nil,         ;; the hazards in order of creation
     last_enemy = nil,   ;; the enemy of the last hit (HazardManager::last_enemy)
@@ -24,7 +24,7 @@ func stat (s, k) {
 }
 
 ;; the damage types of engine/damage_types.txt, in order
-val DAMAGE = [
+pin DAMAGE = [
     [id = "melee", min = "dmg_melee_min", max = "dmg_melee_max", resist = "melee_resist", elemental = false],
     [id = "ranged", min = "dmg_ranged_min", max = "dmg_ranged_max", resist = "ranged_resist", elemental = false],
     [id = "ment", min = "dmg_ment_min", max = "dmg_ment_max", resist = "ment_resist", elemental = false],
@@ -72,8 +72,8 @@ func rand_between_f (lo, hi) {
 
 ;; PowerManager::initHazard: a new hazard of a power
 func hazard_new (id, pw, src, ox, oy, tx, ty) {
-    val hz = [
-        power = pw, power_id = id, src = src,
+    pin hz = [
+        power = pw, power_id = id, src_id = play_id(src),
         source = pw.source_type || (if src.hero => "hero" => "enemy"),
         crit = stat(src, "crit"), accuracy = stat(src, "accuracy"),
         damage = [], dir = 0, lifespan = pw.lifespan, active = !pw.no_attack,
@@ -157,7 +157,7 @@ func power_activate (id, src, ox, oy, tx0, ty0) {
             if pw.use_hazard {
                 var delay = 0
                 loop _ in pw.count {
-                    val hz = hazard_new(id, pw, src, ox, oy, tx, ty)
+                    pin hz = hazard_new(id, pw, src, ox, oy, tx, ty)
                     set hz.delay = delay
                     set delay += pw.delay
                     set combat.new@+ = hz
@@ -254,7 +254,7 @@ func power_activate (id, src, ox, oy, tx0, ty0) {
             val dir = fl.direction(ox, oy, tx, ty)
             fl.col_block(px, py, src.hero)
             loop _ in pw.count {
-                play_spawn_request([type = pw.spawn_type, x = fl.f32(px), y = fl.f32(py), dir = dir, summoner = src])
+                play_spawn_request([type = pw.spawn_type, x = fl.f32(px), y = fl.f32(py), dir = dir, summoner = play_id(src)])
             }
             power_buff(id, pw, src, tx, ty)
             true
@@ -299,7 +299,7 @@ func power_effect (t, caster, id, pw) {
 }
 
 ;; Entity::takeHit: true if the target was hit
-func take_hit (t, hz) {
+func take_hit (t, hz, src) {
     val pw = hz.power
     if (t.state == STATE.DEAD) || (t.state == STATE.CRITDEAD) {
         return false
@@ -384,14 +384,14 @@ func take_hit (t, hz) {
     }
     ;; a hit breaks a stun; then the effects of the power, and its post powers
     effect.remove(t, "stun")
-    power_effect(t, hz.src, hz.power_id, pw)
+    power_effect(t, src, hz.power_id, pw)
     if !t.hero {
         set t.encountered = true
     }
     loop _, c in pw.chain {
         if c.type == "post_power" {
             if percent_f(c.chance) {
-                power_activate(c.id, hz.src, hz.x, hz.y, t.x, t.y)
+                power_activate(c.id, src, hz.x, hz.y, t.x, t.y)
             }
         }
     }
@@ -422,6 +422,26 @@ func take_hit (t, hz) {
         }
     }
     true
+}
+
+;; the source of a hazard, by its id: the hero, an enemy, or the StatBlock
+;; of an event (the hazards are kept by the module, which may not hold the
+;; entities of a map)
+func combat_src (hz, ens, hero) {
+    if hz.src_id == 0 {
+        return hero
+    }
+    loop _, t in ens {
+        if t.pub.id == hz.src_id {
+            return t.pub
+        }
+    }
+    loop _, ev in play.events {
+        if ev.stats && (ev.stats.id == hz.src_id) {
+            return ev.stats
+        }
+    }
+    nil
 }
 
 ;; HazardManager::logic, once per frame after the enemies
@@ -465,7 +485,7 @@ func hazards_logic (ens, hero) {
                     loop _, c in hz.power.chain {
                         if (c.type == "wall_power") && percent_f(c.chance) {
                             val n = #combat.new
-                            power_activate(c.id, hz.src, hz.x, hz.y, hz.x, hz.y)
+                            power_activate(c.id, combat_src(hz, ens, hero), hz.x, hz.y, hz.x, hz.y)
                             if power.get(c.id).directional && (#combat.new > n) {
                                 set combat.new@(#combat.new - 1).dir = hz.dir
                             }
@@ -483,7 +503,7 @@ func hazards_logic (ens, hero) {
                 } else {
                     if (e.hp > 0) && hz.active && (fl.dist(hz.x, hz.y, e.x, e.y) < hz.power.radius) && X.nin(e.id, hz.hit) {
                         set hz.hit@+ = e.id
-                        val hit = take_hit(e, hz)
+                        val hit = take_hit(e, hz, combat_src(hz, ens, hero))
                         if !hz.power.beacon {
                             set combat.last_enemy = e
                         }
@@ -500,7 +520,7 @@ func hazards_logic (ens, hero) {
                 val h = hero
                 if (h.hp > 0) && hz.active && (fl.dist(hz.x, hz.y, h.x, h.y) < hz.power.radius) && X.nin(0, hz.hit) {
                     set hz.hit@+ = 0
-                    if take_hit(h, hz) && !hz.power.multitarget {
+                    if take_hit(h, hz, combat_src(hz, ens, hero)) && !hz.power.multitarget {
                         set hz.active = false
                         if !hz.power.complete_animation {
                             set hz.lifespan = 0
