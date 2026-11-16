@@ -32,8 +32,7 @@ func loot_add (id, q, x, y) {
     }
     val it = item.get(id)
     ;; built in place, owned by the module
-    set loot.ground@+ = [id = id, q = q, x = ax, y = ay, cur = nil, on_ground = true]
-    val g = loot.ground@(#loot.ground - 1)
+    val g = vector.insert(loot.ground, [id = id, q = q, x = ax, y = ay, cur = nil, on_ground = true])
     if it && (#it.loot_animation > 0) {
         var la = it.loot_animation@(#it.loot_animation - 1)
         loop _, a in it.loot_animation {
@@ -184,9 +183,8 @@ func loot_check (list, x, y, hero) {
 func loot_dropping (e) {
     ;; what the drops need, copied (the module may not hold an entity): its
     ;; place, its count, and its loot, which leaves the entity
-    set loot.dropping@+ = [x = e.x, y = e.y, loot = [],
-                           loot_count = [e.loot_count@0, e.loot_count@1]]
-    val d = loot.dropping@(#loot.dropping - 1)
+    val d = vector.insert(loot.dropping, [x = e.x, y = e.y, loot = [],
+                           loot_count = [e.loot_count@0, e.loot_count@1]])
     loop _, l in e.loot {
         set d.loot@+ = X.copy(l)
     }

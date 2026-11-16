@@ -41,8 +41,7 @@ func list_dir (dir) {
 func enemy.init () {
     loop _, path in list_dir("enemies") {
         ;; owned by the module, then in the lists of its categories
-        set enemy.all@+ = [type = path, level = 0, rarity = "common"]
-        val e = enemy.all@(#enemy.all - 1)
+        val e = vector.insert(enemy.all, [type = path, level = 0, rarity = "common"])
         var cats = ""
         loop _, s in ini.load(path) || [] {
             loop _, kv in s.keys {
@@ -96,9 +95,8 @@ func enemy.groups (m) {
     loop _, s in m.secs {
         if s.name == "enemy" {
             ;; built in place, owned by the list
-            set gs@+ = [category = "", pos = [0, 0], area = [1, 1], lmin = 0, lmax = 0,
-                        nmin = 1, nmax = 1, chance = 100.0, dir = -1, wander = 4, waypoints = []]
-            val g = gs@(#gs - 1)
+            val g = vector.insert(gs, [category = "", pos = [0, 0], area = [1, 1], lmin = 0, lmax = 0,
+                        nmin = 1, nmax = 1, chance = 100.0, dir = -1, wander = 4, waypoints = []])
             loop _, kv in s.keys {
                 val k, v = kv@0, kv@1
                 pin l = parse.list(v)

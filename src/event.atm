@@ -80,10 +80,9 @@ func event.load (m) {
     loop _, s in m.secs {
         if s.name == "event" {
             ;; built in place, owned by the list
-            set evs@+ = [type = "", activate = 0, loc = [0, 0, 0, 0], hotspot = [0, 0, 0, 0],
+            val ev = vector.insert(evs, [type = "", activate = 0, loc = [0, 0, 0, 0], hotspot = [0, 0, 0, 0],
                          center = [-1, -1], comps = [], keep = true,
-                         cooldown = timer(0), delay = timer(0), inside = false]
-            val ev = evs@(#evs - 1)
+                         cooldown = timer(0), delay = timer(0), inside = false])
             loop _, kv in s.keys {
                 val k, v = kv@0, kv@1
                 pin l = parse.list(v)

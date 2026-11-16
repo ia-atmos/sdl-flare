@@ -187,8 +187,7 @@ func anim.load (path) {
 
     val func finish () {
         ;; owned by the set, in its order
-        set aset.order@+ = anim_new(name, type, st, frames, duration)
-        val n = aset.order@(#aset.order - 1)
+        val n = vector.insert(aset.order, anim_new(name, type, st, frames, duration))
         anim_grid(n, cfg.size, cfg.offset, position, imgs@image_id || first_img, image_id)
         anim_active(n, cfg.active, active_sub)
         set cfg.active = []

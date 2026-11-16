@@ -158,8 +158,7 @@ func power_activate (id, src, ox, oy, tx0, ty0) {
                 var delay = 0
                 loop _ in pw.count {
                     ;; created in the queue of the module, which owns it
-                    set combat.new@+ = hazard_new(id, pw, src, ox, oy, tx, ty)
-                    val hz = combat.new@(#combat.new - 1)
+                    val hz = vector.insert(combat.new, hazard_new(id, pw, src, ox, oy, tx, ty))
                     set hz.delay = delay
                     set delay += pw.delay
                 }
@@ -174,8 +173,7 @@ func power_activate (id, src, ox, oy, tx0, ty0) {
             var delay = 0
             loop i in pw.count {
                 ;; created in the queue of the module, which owns it
-                set combat.new@+ = hazard_new(id, pw, src, ox, oy, tx, ty)
-                val hz = combat.new@(#combat.new - 1)
+                val hz = vector.insert(combat.new, hazard_new(id, pw, src, ox, oy, tx, ty))
                 val cnt, ang = pw.count, pw.missile_angle
                 val off = `:number.float (double)(((1.0f - (float)a_dbl($cnt)) / 2 + (float)a_dbl($i)) * ((float)a_dbl($ang) * (float)M_PI / 180.0f))`
                 var variance = 0.0
@@ -221,8 +219,7 @@ func power_activate (id, src, ox, oy, tx0, ty0) {
                 val wall = !fl.col_valid(lx, ly, MOVE.FLYING, COLLIDE.HAZARD)
                 until wall && (i > 0)
                 ;; created in the queue of the module, which owns it
-                set combat.new@+ = hazard_new(id, pw, src, ox, oy, tx, ty)
-                val hz = combat.new@(#combat.new - 1)
+                val hz = vector.insert(combat.new, hazard_new(id, pw, src, ox, oy, tx, ty))
                 set hz.x, hz.y = lx, ly
                 set hz.delay = delay
                 set delay += pw.delay
