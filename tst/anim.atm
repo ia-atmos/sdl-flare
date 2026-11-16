@@ -10,7 +10,7 @@ ini.set_mods(os.getenv("FLARE_DATA"), ini.resolve(os.getenv("FLARE_DATA"), ["alp
 
 val z = anim.load("animations/enemies/zombie.txt")
 print("first", z.first)
-val names = []
+pin names = []
 loop k, _ in z.anims {
     set names@+ = k
 }

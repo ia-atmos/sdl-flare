@@ -9,7 +9,7 @@
 ;;
 ;; Justify: font.LEFT, font.RIGHT, font.CENTER, as FontEngine::JUSTIFY_*.
 
-val font = [
+pin font = [
     LEFT = 0, RIGHT = 1, CENTER = 2,
     styles = [],        ;; id -> [img, blend, shadow=[x,y], height]
     colors = [],        ;; name -> 0xRRGGBB
@@ -20,7 +20,7 @@ func font.init () {
     loop _, s in ini.load("engine/font_settings.txt") || [] {
         var id = nil
         var use_default = true
-        val st = [path = nil, size = 0, blend = true, bold = false, italic = false,
+        pin st = [path = nil, size = 0, blend = true, bold = false, italic = false,
                   underline = false, shadow = [1, 1]]
         loop _, kv in s.keys {
             val k, v = kv@0, kv@1
@@ -29,7 +29,7 @@ func font.init () {
                     set id = v
                 }
                 k == "style" => {
-                    val l = parse.list(v)
+                    pin l = parse.list(v)
                     val lang = l@0
                     if ((lang == "default") && use_default) || (lang == "en") {
                         if lang != "default" {
@@ -55,7 +55,7 @@ func font.init () {
             val style = (if st.bold => 1 => 0) | (if st.italic => 2 => 0) | (if st.underline => 4 => 0)
             val f = fl.font(path || "", st.size, style)
             if f >= 0 {
-                set font.styles@id = [img = f, blend = st.blend, shadow = st.shadow,
+                set font.styles@id = [img = f, blend = st.blend, shadow = [st.shadow@0, st.shadow@1],
                                       height = fl.text_height(f)]
                 if font.first == nil {
                     set font.first = id

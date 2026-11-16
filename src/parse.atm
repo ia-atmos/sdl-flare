@@ -28,10 +28,10 @@ static double fl_tofloat (const char* s, double def) {
 }
 ```
 
-val parse = []
+pin parse = []
 
 func parse.list (s) {
-    val ret = []
+    pin ret = []
     var i = 0
     var j = 0
     loop {
@@ -104,6 +104,6 @@ func parse.direction (s) {
 }
 
 func parse.rgb (s) {
-    val l = parse.list(s)
+    pin l = parse.list(s)
     ((parse.int(l@0) & 0xFF) << 16) | ((parse.int(l@1) & 0xFF) << 8) | (parse.int(l@2) & 0xFF)
 }

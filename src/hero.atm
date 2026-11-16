@@ -18,7 +18,7 @@
 ;; drawing only).
 
 
-val hero = [
+pin hero = [
     steps = [],         ;; the sounds of steps (items/step_sounds.txt)
     sfx = [attack = [], hit = [], die = [], critdie = [], block = []],
                         ;; the sounds of the avatar (engine/avatar/<base>.txt)
@@ -30,7 +30,7 @@ val hero = [
 func hero.load_sfx (base) {
     loop _, s in ini.load("engine/avatar/" ++ base ++ ".txt") || [] {
         loop _, kv in s.keys {
-            val l = parse.list(kv@1)
+            pin l = parse.list(kv@1)
             match kv@0 {
                 "sfx_attack" => {
                     set hero.sfx.attack@(l@0) = hero.sfx.attack@(l@0) || []
@@ -49,16 +49,16 @@ func hero.load_sfx (base) {
 ;; and no effects: `stat=`, then `stat_per_primary=` times the primary
 ;; points above 1 (the class gives its `primary=`)
 func hero.stats (class) {
-    val primary = [physical = 1, mental = 1, offense = 1, defense = 1]
+    pin primary = [physical = 1, mental = 1, offense = 1, defense = 1]
     loop _, s in ini.load("engine/classes.txt") || [] {
-        val keys = []
+        pin keys = []
         loop _, kv in s.keys {
             set keys@(kv@0) = kv@1
         }
         if keys.name == class {
             loop _, kv in s.keys {
                 if kv@0 == "primary" {
-                    val l = parse.list(kv@1)
+                    pin l = parse.list(kv@1)
                     set primary@(l@0) = primary@(l@0) + parse.int(l@1)
                 }
                 if kv@0 == "equipment" {
@@ -76,12 +76,12 @@ func hero.stats (class) {
             }
         }
     }
-    val st = [speed = 0.2, hp = 0, mp = 0, sfx_step = ""]
-    val base = []
+    pin st = [speed = 0.2, hp = 0, mp = 0, sfx_step = ""]
+    pin base = []
     loop _, s in ini.load("engine/stats.txt") || [] {
         loop _, kv in s.keys {
             val k, v = kv@0, kv@1
-            val l = parse.list(v)
+            pin l = parse.list(v)
             match k {
                 "stat" => {
                     set base@(l@0) = parse.float(l@1)
@@ -109,7 +109,7 @@ func hero.stats (class) {
                     set id = parse.int(kv@1)
                 }
                 (kv@0 == "dmg") && X.xin(id, hero.equipment) => {
-                    val l = parse.list(kv@1)
+                    pin l = parse.list(kv@1)
                     val kmin = "dmg_" ++ l@0 ++ "_min"
                     val kmax = "dmg_" ++ l@0 ++ "_max"
                     set base@kmin = (base@kmin || 0) + parse.float(l@1)
@@ -256,7 +256,7 @@ task Move (h, turning) {
 task HPower (h, turning) {
     set h.state = STATE.POWER
     val id = h.next.power
-    var tgt = h.next.target
+    var tx, ty = h.next.target@0, h.next.target@1
     set h.next = nil
     val pw = power.get(id)
     loop {
@@ -264,10 +264,10 @@ task HPower (h, turning) {
         if anim.is_first(h.cur) {
             ;; Avatar::beginPower
             if h.cursor_enemy {
-                set tgt = [h.cursor_enemy.x, h.cursor_enemy.y]
+                set tx, ty = h.cursor_enemy.x, h.cursor_enemy.y
             }
             if pw.face {
-                set h.dir = fl.direction(h.x, h.y, tgt@0, tgt@1)
+                set h.dir = fl.direction(h.x, h.y, tx, ty)
             }
             ;; Entity::playAttackSound
             val snds = hero.sfx.attack@(pw.attack_anim) || []
@@ -280,7 +280,7 @@ task HPower (h, turning) {
         }
         if anim.is_active(h.cur) {
             fl.col_block(h.x, h.y, false)
-            power_activate(id, h, h.x, h.y, tgt@0, tgt@1)
+            power_activate(id, h, h.x, h.y, tx, ty)
         }
         if anim.is_last(h.cur) || (h.cur.a.name != pw.attack_anim) {
             timer_begin(h.cooldown)

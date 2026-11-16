@@ -31,8 +31,8 @@ item.init()
 loot.init()
 combat.init()
 
-val pos = if os.getenv("FLARE_POS") {
-    val l = parse.list(os.getenv("FLARE_POS"))
+pin pos = if os.getenv("FLARE_POS") {
+    pin l = parse.list(os.getenv("FLARE_POS"))
     [parse.float(l@0), parse.float(l@1)]
 } else {
     ;; a new game goes to maps/spawn.txt at (0,0): the teleport destination of

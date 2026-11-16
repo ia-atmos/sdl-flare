@@ -10,7 +10,7 @@
 ;; `fx_remove`), clears its status, and emits `:fx.logic` to its effects:
 ;; each live one sets the status (`stun`), and ends after its duration.
 
-val effect = [
+pin effect = [
     defs = [],          ;; id -> [id, type, can_stack]
 ]
 
@@ -20,8 +20,8 @@ func effect.init () {
         loop _, kv in s.keys {
             match kv@0 {
                 "id" => {
-                    set d = effect.defs@(kv@1) || [id = kv@1, type = kv@1, can_stack = true]
-                    set effect.defs@(kv@1) = d
+                    set effect.defs@(kv@1) = effect.defs@(kv@1) || [id = kv@1, type = kv@1, can_stack = true]
+                    set d = effect.defs@(kv@1)
                 }
                 "type" => { if d { set d.type = kv@1 } }
                 "can_stack" => { if d { set d.can_stack = parse.bool(kv@1) } }
@@ -44,7 +44,9 @@ func effect_resist (type, m) {
 
 ;; EffectManager::addEffect, up to the request: false if resisted
 func effect.add (t, id, d, m) {
-    val def = effect.defs@id || [id = id, type = id, can_stack = true]
+    ;; an effect with no definition: the defaults, kept by the module
+    set effect.defs@id = effect.defs@id || [id = id, type = id, can_stack = true]
+    val def = effect.defs@id
     val r = effect_resist(def.type, m)
     if r && percent_f(stat(t, r)) {
         return false

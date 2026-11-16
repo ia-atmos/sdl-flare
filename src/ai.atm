@@ -40,7 +40,7 @@ func timer_begin (t) {
 ;; a timer of the stats of an enemy: full if its file set it (setDuration),
 ;; empty otherwise (the constructor of Timer)
 func timer_of (st, k, d) {
-    val t = timer(d)
+    pin t = timer(d)
     if st.set_by_file@k {
         set t.cur = d
     }
@@ -53,7 +53,7 @@ val ENCOUNTER_DIST = `:number.float (double)(sqrtf(powf((float)(FL_W/192), 2.f) 
 ;; StatBlock::getAIPower: the powers of a type that pass their chance and
 ;; cooldown, then one of them
 func ai_power (e, type) {
-    val ok = []
+    pin ok = []
     loop _, p in e.powers {
         if p.type == type {
             if percent_f(p.chance) && timer_end(p.cd) {
@@ -169,7 +169,7 @@ func ai_find_target (e, hero_st) {
     }
     if e.fleeing {
         val middle = fl.direction(e.pursue@0, e.pursue@1, e.x, e.y)
-        val dirs = []
+        pin dirs = []
         loop k in (-2, 2) {
             val d = fl.rotate(middle, k)
             val tx, ty = fl.vector(e.x, e.y, d, 1)
@@ -595,11 +595,13 @@ task Enemy (st, me) {
     }
 
     spawn {
-        var next = [act = me.state || "stance"]
+        ;; the next action (a variable does not own a table)
+        pin st = [next = [act = me.state || "stance"]]
         loop {
             set e.next = nil
+            val next = st.next
             val act = ai_act(e, next)
-            set next = ifs {
+            set st.next = ifs {
                 next.act == "power" => (await act(e, next.power))
                 next.act == "critdead" => (await act(e, true))
                 next.act == "dead" => (await act(e, false))

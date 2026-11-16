@@ -10,7 +10,7 @@
 ```
 
 ;; the actions of the input, as `Input::` of the original
-val Input = [
+pin Input = [
     CANCEL = 0, ACCEPT = 1, UP = 2, DOWN = 3, LEFT = 4, RIGHT = 5,
     BAR_1 = 6, BAR_2 = 7, BAR_3 = 8, BAR_4 = 9, BAR_5 = 10, BAR_6 = 11, BAR_7 = 12,
     BAR_8 = 13, BAR_9 = 14, BAR_0 = 15,
@@ -20,10 +20,10 @@ val Input = [
 ]
 
 ;; the movement and collide types of MapCollision
-val MOVE = [NORMAL = 0, FLYING = 1, INTANGIBLE = 2]
-val COLLIDE = [NONE = 0, ALL = 1, HERO = 2, HAZARD = 3]
+pin MOVE = [NORMAL = 0, FLYING = 1, INTANGIBLE = 2]
+pin COLLIDE = [NONE = 0, ALL = 1, HERO = 2, HAZARD = 3]
 
-val fl = [
+pin fl = [
     ;; the size of the render
     W = `:number FL_W`,
     H = `:number FL_H`,
@@ -299,7 +299,7 @@ val fl = [
     path = func (sx, sy, ex, ey, mt) {
         `fl_path((float)a_dbl($sx), (float)a_dbl($sy), (float)a_dbl($ex), (float)a_dbl($ey), fl_int($mt), 0);`
         val n = `:number FL_PATH_N`
-        val ret = []
+        pin ret = []
         loop i in n {
             set ret@+ = [`:number.float (double)FL_PATH[(int)a_dbl($i)].x`, `:number.float (double)FL_PATH[(int)a_dbl($i)].y`]
         }

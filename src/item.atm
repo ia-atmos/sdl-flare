@@ -8,7 +8,7 @@
 ;; read again (in a later mod) clears its list at its first
 ;; `loot_animation`, as the original.
 
-val item = [
+pin item = [
     all = [],       ;; id -> item
 ]
 
@@ -34,7 +34,7 @@ func item.init () {
                         set it.loot_animation = []
                         set clear_anim = false
                     }
-                    val l = parse.list(v)
+                    pin l = parse.list(v)
                     set it.loot_animation@+ = [name = l@0, low = parse.int(l@1 || ""), high = parse.int(l@2 || "")]
                 }
             }

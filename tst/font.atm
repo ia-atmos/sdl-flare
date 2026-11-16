@@ -9,7 +9,7 @@ include "../src/font.atm"
 ini.set_mods(os.getenv("FLARE_DATA"), ini.resolve(os.getenv("FLARE_DATA"), ["alpha_demo"]))
 font.init()
 
-val ids = []
+pin ids = []
 loop k, _ in font.styles {
     set ids@+ = k
 }

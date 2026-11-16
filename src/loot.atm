@@ -5,7 +5,7 @@
 ;; An entry: [table = true] for the name of a table (its entries follow
 ;; it), or [id, chance, qmin, qmax, max_drops]; a chance of 0 is fixed.
 
-val loot = [
+pin loot = [
     tables = [],        ;; path -> entries
     dropping = [],      ;; the enemies that died in this frame
     drop_max = 1,       ;; of engine/loot.txt
@@ -31,7 +31,9 @@ func loot_add (id, q, x, y) {
         }
     }
     val it = item.get(id)
-    val g = [id = id, q = q, x = ax, y = ay, cur = nil, on_ground = true]
+    ;; built in place, owned by the module
+    set loot.ground@+ = [id = id, q = q, x = ax, y = ay, cur = nil, on_ground = true]
+    val g = loot.ground@(#loot.ground - 1)
     if it && (#it.loot_animation > 0) {
         var la = it.loot_animation@(#it.loot_animation - 1)
         loop _, a in it.loot_animation {
@@ -43,7 +45,6 @@ func loot_add (id, q, x, y) {
         set g.cur = anim.cursor(anim.get(anim.load(la.name), ""))
         set g.on_ground = false
     }
-    set loot.ground@+ = g
 }
 
 func loot_entry (id, chance, l, k) {
@@ -92,20 +93,22 @@ func loot.init () {
         }
     }
     loop _, path in list_dir("loot") {
-        val list = []
+        ;; built in place, owned by the module
+        set loot.tables@path = []
+        val list = loot.tables@path
         loop _, s in ini.load(path) || [] {
             if s.name == "loot" {
                 var id = nil
                 var chance = ""
-                var q = []
+                pin c = [q = []]
                 loop _, kv in s.keys {
                     match kv@0 {
                         "id" => { set id = loot_id(kv@1) }
                         "chance" => { set chance = kv@1 }
-                        "quantity" => { set q = parse.list(kv@1) }
+                        "quantity" => { set c.q = parse.list(kv@1) }
                     }
                 }
-                set list@+ = loot_entry(id, chance, q, 0)
+                set list@+ = loot_entry(id, chance, c.q, 0)
             } else {
                 loop _, kv in s.keys {
                     if kv@0 == "loot" {
@@ -114,7 +117,6 @@ func loot.init () {
                 }
             }
         }
-        set loot.tables@path = list
     }
 }
 
@@ -153,24 +155,24 @@ func loot_check (list, x, y, hero) {
         }
     }
     var threshold = 100.0
-    var possible = []
+    pin c = [possible = []]
     loop _, e in list {
         if !e.table {
             if e.chance >= chance {
                 if e.chance <= threshold {
                     if e.chance != threshold {
-                        set possible = []
+                        set c.possible = []
                     }
                     set threshold = e.chance
                 }
                 if (chance <= threshold) && (e.max_drops != 0) {
-                    set possible@+ = e
+                    set c.possible@+ = e
                 }
             }
         }
     }
-    if #possible > 0 {
-        val e = possible@(fl.rand() % #possible)
+    if #c.possible > 0 {
+        val e = c.possible@(fl.rand() % #c.possible)
         loot_drop(e, x, y, hero)
         if e.max_drops > 0 {
             set e.max_drops = e.max_drops - 1

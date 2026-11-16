@@ -10,7 +10,7 @@
 ;; The other sections of the file (npcs, enemies, events) are read by
 ;; the tasks that use them, from `secs`.
 
-val map = [
+pin map = [
     tileset_path = nil,     ;; the tileset in C
 ]
 
@@ -34,13 +34,13 @@ func map.tileset (path) {
                     set img = fl.img(ini.locate(v) || v)
                 }
                 "tile" => {
-                    val l = parse.list(v)
+                    pin l = parse.list(v)
                     fl.tset_tile(parse.int(l@0), img, parse.int(l@1), parse.int(l@2),
                         parse.int(l@3), parse.int(l@4), parse.int(l@5), parse.int(l@6))
                 }
                 "animation" => {
                     ;; index, then x, y, duration for each frame
-                    val l = parse.list(v)
+                    pin l = parse.list(v)
                     val idx = parse.int(l@0)
                     var k = 1
                     loop {
@@ -56,8 +56,8 @@ func map.tileset (path) {
 }
 
 func map.load (path) {
-    val secs = ini.load(path) || []
-    val m = :Map [path = path, w = 0, h = 0, title = "", music = "", tileset = "",
+    pin secs = ini.load(path) || []
+    pin m = :Map [path = path, w = 0, h = 0, title = "", music = "", tileset = "",
                   hero = [0, 0], bg = 0x000000FF, secs = secs]
     ;; the header first: the size of the layers
     loop _, s in secs {
@@ -71,11 +71,11 @@ func map.load (path) {
                     "music"    => { set m.music = v }
                     "tileset"  => { set m.tileset = v }
                     "hero_pos" => {
-                        val l = parse.list(v)
+                        pin l = parse.list(v)
                         set m.hero = [parse.int(l@0) + 0.5, parse.int(l@1) + 0.5]
                     }
                     "background_color" => {
-                        val l = parse.list(v)
+                        pin l = parse.list(v)
                         set m.bg = ((parse.int(l@0) & 0xFF) << 24) | ((parse.int(l@1) & 0xFF) << 16) |
                                    ((parse.int(l@2) & 0xFF) << 8) | (parse.int(l@3) & 0xFF)
                     }

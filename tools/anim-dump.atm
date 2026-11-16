@@ -11,8 +11,8 @@ include "../src/anim.atm"
 val dir, mods, list = ...
 ini.set_mods(dir, string.split(mods, ","))
 
-val TYPES = [play_once=1, looped=2, back_forth=3]
-val SUBS = [end=0, start=1, all=2]
+pin TYPES = [play_once=1, looped=2, back_forth=3]
+pin SUBS = [end=0, start=1, all=2]
 
 func ints (t) {
     var s = ""
