@@ -44,10 +44,8 @@ the whole conversation.
     tables of `st.next`) is allowed, not required: to ask the author.
     Recommended: keep the code as it is until the regression below is
     settled, then revert only the holder tables, which read as noise.
-    Regression: the compiler since `0ba7afc` finalizes the AI power
-    entries of an enemy while its pub still holds them (runs `fight` and
-    `stand-ice_hall` stop); reported to the session of the compiler; the
-    local compiler is kept at `d553af7`, the last commit that passes.
+    The regression of `0ba7afc` (AI power entries finalized while held)
+    was fixed in `f3389f6`: the full suite passes with `main` again.
 
 ## B. Known work, not done
 
