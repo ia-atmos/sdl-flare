@@ -17,7 +17,7 @@ pin enemy = [
 ;; order, its files in the order of readdir, a file of a later mod in the
 ;; place of the same file of an earlier one. The paths are relative.
 func list_dir (dir) {
-    pin ret = []
+    val ret = []
     loop _,m in ini.mods {
         loop _, f in fl.dir(ini.dir ++ "/mods/" ++ m ++ "/" ++ dir, "txt") || [] {
             val p = dir ++ "/" ++ f
@@ -91,7 +91,7 @@ func enemy_random (cat, lo, hi) {
 
 ;; the groups of a map, in the order of the file
 func enemy.groups (m) {
-    pin gs = []
+    val gs = []
     loop _, s in m.secs {
         if s.name == "enemy" {
             ;; built in place, owned by the list
@@ -155,7 +155,7 @@ func enemy_place_one (ret, x, y, g) {
 
 ;; MapRenderer::pushEnemyGroup for each group: the enemies to spawn
 func enemy.place (groups) {
-    pin ret = []
+    val ret = []
     loop _, g in groups {
         if percent_f(g.chance) {
             var n = rand_between(g.nmin, g.nmax)

@@ -76,7 +76,7 @@ func event_components (ev, k, v) {
 
 ;; EventManager::loadEvent for each `[event]` of a map
 func event.load (m) {
-    pin evs = []
+    val evs = []
     loop _, s in m.secs {
         if s.name == "event" {
             ;; built in place, owned by the list

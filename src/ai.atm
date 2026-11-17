@@ -40,7 +40,7 @@ func timer_begin (t) {
 ;; a timer of the stats of an enemy: full if its file set it (setDuration),
 ;; empty otherwise (the constructor of Timer)
 func timer_of (st, k, d) {
-    pin t = timer(d)
+    val t = timer(d)
     if st.set_by_file@k {
         set t.cur = d
     }

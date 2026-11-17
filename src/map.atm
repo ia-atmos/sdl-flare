@@ -56,8 +56,8 @@ func map.tileset (path) {
 }
 
 func map.load (path) {
-    pin secs = ini.load(path) || []
-    pin m = :Map [path = path, w = 0, h = 0, title = "", music = "", tileset = "",
+    val secs = ini.load(path) || []
+    val m = :Map [path = path, w = 0, h = 0, title = "", music = "", tileset = "",
                   hero = [0, 0], bg = 0x000000FF, secs = secs]
     ;; the header first: the size of the layers
     loop _, s in secs {

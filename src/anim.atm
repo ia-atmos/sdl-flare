@@ -40,7 +40,7 @@ pin anim = [
 ;; Animation::setup: the sub-frames of `frames` frames in `duration`
 ;; logic frames, evenly or by Bresenham's line
 func anim_sub (frames, duration) {
-    pin sub = []
+    val sub = []
     if (frames > 0) && ((duration % frames) == 0) {
         val div = duration // frames
         loop i in frames {
@@ -75,14 +75,14 @@ func anim_sub (frames, duration) {
 
 ;; a new animation, as the constructor and Animation::setup
 func anim_new (name, type, st, frames, duration) {
-    pin sub = anim_sub(frames, duration)
+    val sub = anim_sub(frames, duration)
     var total = if #sub > 0 => (sub@# + 1) => 0
     if type == "back_forth" {
         set total = 2 * total
     }
     ;; the first and the last sub-frame of each frame
-    pin first = []
-    pin last = []
+    val first = []
+    val last = []
     loop i in total {
         set first@i = 0
         set last@i = #sub - 1

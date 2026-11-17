@@ -87,7 +87,7 @@ val func ini_mod_key (dir, mod, key) {
 ;; (`requires=name:min:max,...` in its `settings.txt`), each mod once.
 ;; Versions and the game of each mod are not checked.
 func ini.resolve (dir, names) {
-    pin ret = ["default"]
+    val ret = ["default"]
     val func add (name) {
         if X.nin(name, ret) {
             val req = ini_mod_key(dir, name, "requires")
@@ -112,7 +112,7 @@ func ini.set_mods (dir, mods) {
 
 ;; the full paths of a file in the mods, from the first to the last mod
 func ini.list (path) {
-    pin ret = []
+    val ret = []
     loop _,m in ini.mods {
         val full = ini.dir ++ "/mods/" ++ m ++ "/" ++ path
         if ini_exists(full) {
@@ -203,7 +203,7 @@ func ini.load (path) {
     if #ini.list(path) == 0 {
         nil
     } else {
-        pin st = [secs=[], name="", cur=nil, cont=false]
+        val st = [secs=[], name="", cur=nil, cont=false]
         ini_read(st, path)
         st.secs
     }

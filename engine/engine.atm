@@ -299,7 +299,7 @@ pin fl = [
     path = func (sx, sy, ex, ey, mt) {
         `fl_path((float)a_dbl($sx), (float)a_dbl($sy), (float)a_dbl($ex), (float)a_dbl($ey), fl_int($mt), 0);`
         val n = `:number FL_PATH_N`
-        pin ret = []
+        val ret = []
         loop i in n {
             set ret@+ = [`:number.float (double)FL_PATH[(int)a_dbl($i)].x`, `:number.float (double)FL_PATH[(int)a_dbl($i)].y`]
         }

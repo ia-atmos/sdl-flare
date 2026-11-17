@@ -31,7 +31,7 @@ static double fl_tofloat (const char* s, double def) {
 pin parse = []
 
 func parse.list (s) {
-    pin ret = []
+    val ret = []
     var i = 0
     var j = 0
     loop {

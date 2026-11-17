@@ -72,7 +72,7 @@ func rand_between_f (lo, hi) {
 
 ;; PowerManager::initHazard: a new hazard of a power
 func hazard_new (id, pw, src, ox, oy, tx, ty) {
-    pin hz = [
+    val hz = [
         power = pw, power_id = id, src_id = play_id(src),
         source = pw.source_type || (if src.hero => "hero" => "enemy"),
         crit = stat(src, "crit"), accuracy = stat(src, "accuracy"),

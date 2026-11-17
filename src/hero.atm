@@ -76,8 +76,8 @@ func hero.stats (class) {
             }
         }
     }
-    pin st = [speed = 0.2, hp = 0, mp = 0, sfx_step = ""]
-    pin base = []
+    val st = [speed = 0.2, hp = 0, mp = 0, sfx_step = ""]
+    val base = []
     loop _, s in ini.load("engine/stats.txt") || [] {
         loop _, kv in s.keys {
             val k, v = kv@0, kv@1
