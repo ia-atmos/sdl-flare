@@ -38,6 +38,17 @@ the whole conversation.
     only to keep the order of the draws (`doc/state.md`), and the hidden
     draws of the original. To ask the author before any of it.
 
+3b. **The rules of pin relaxed on 2026-11-17** (`val`/`var` may hold a
+    fresh value again; a place that owns its value may be reassigned).
+    Going back on parts of the migration (the in-place idioms, the holder
+    tables of `st.next`) is allowed, not required: to ask the author.
+    Recommended: keep the code as it is until the regression below is
+    settled, then revert only the holder tables, which read as noise.
+    Regression: the compiler since `0ba7afc` finalizes the AI power
+    entries of an enemy while its pub still holds them (runs `fight` and
+    `stand-ice_hall` stop); reported to the session of the compiler; the
+    local compiler is kept at `d553af7`, the last commit that passes.
+
 ## B. Known work, not done
 
 3. (F5 closed: its logic matches on the 30 runs.) Moved to F6: the game
