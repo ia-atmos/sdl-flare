@@ -595,7 +595,7 @@ task Enemy (st, me) {
     }
 
     spawn {
-        pin var next = [act = me.state || "stance"]
+        var next = [act = me.state || "stance"]
         loop {
             set e.next = nil
             val act = ai_act(e, next)
