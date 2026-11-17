@@ -38,7 +38,7 @@ the whole conversation.
     only to keep the order of the draws (`doc/state.md`), and the hidden
     draws of the original. To ask the author before any of it.
 
-3b. **The rules of pin relaxed on 2026-11-17** (`val`/`var` may hold a
+3b. (Done: the holder tables are gone, see 14c.) **The rules of pin relaxed on 2026-11-17** (`val`/`var` may hold a
     fresh value again; a place that owns its value may be reassigned).
     Going back on parts of the migration (the in-place idioms, the holder
     tables of `st.next`) is allowed, not required: to ask the author.
@@ -103,6 +103,13 @@ the whole conversation.
      of the compiler. Entities that modules kept are now ids or copies
      (hazard sources, summoners, the last enemy hit, the loot of a dead
      enemy, the enemy under the mouse): a weak reference would undo it.
+
+14c. The second migration to the rules of pin (2026-11-17, stable) is
+     done, identical tests; the report went to the compiler session.
+     The experiment of a per-map context owned by MapRun is on the branch
+     `exp-map-context` (identical tests; removes four of the five ids
+     and copies of case E; the hero sends requests to the map): reported
+     to the session on the rules of pin; not merged, for the author.
 
 ## D. Older
 
