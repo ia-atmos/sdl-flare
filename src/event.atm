@@ -2,7 +2,7 @@
 ;; original loads and executes them, and the statuses of the campaign.
 ;;
 ;;      event.load(m)           the events of a map, in order
-;;      event.execute(ev, w, h)    EventManager::executeEvent: false if kept
+;;      event.execute(ev, w)    EventManager::executeEvent: false if kept
 ;;      event.check(evs, x, y, w)   MapRenderer::checkEvents at a position
 ;;      event.on_load(evs, w)   MapRenderer::executeOnLoadEvents
 ;;      event.logic(evs, w)     the cooldowns and delays (MapRenderer::logic)
@@ -159,7 +159,7 @@ func event_active (ev) {
 }
 
 ;; EventManager::executeEventInternal: false while the event is kept
-func event.execute (ev, w, h) {
+func event.execute (ev, w) {
     if !timer_end(ev.delay) || !timer_end(ev.cooldown) {
         return false
     }
@@ -208,7 +208,7 @@ func event.execute (ev, w, h) {
                 loop _, p in ev.comps {
                     if p.type == "power_path" {
                         if p.hero {
-                            set tx, ty = h.x, h.y
+                            set tx, ty = w.hero.x, w.hero.y
                         } else {
                             set tx, ty = p.tx + 0.5, p.ty + 0.5
                         }
@@ -222,7 +222,7 @@ func event.execute (ev, w, h) {
 }
 
 ;; MapRenderer::executeOnLoadEvents: on_load, then static, each in reverse
-func event.on_load (evs, w, h) {
+func event.on_load (evs, w) {
     loop _, act in [ACTIVATE.on_load, ACTIVATE.static] {
         var i = #evs
         loop {
@@ -230,7 +230,7 @@ func event.on_load (evs, w, h) {
             set i -= 1
             val ev = evs@i
             if event_active(ev) && (ev.activate == act) {
-                if event.execute(ev, w, h) {
+                if event.execute(ev, w) {
                     vector.remove(evs, i)
                 }
             }
@@ -239,7 +239,7 @@ func event.on_load (evs, w, h) {
 }
 
 ;; MapRenderer::checkEvents, in reverse
-func event.check (evs, x, y, w, h) {
+func event.check (evs, x, y, w) {
     val mx, my = math.floor(x), math.floor(y)
     var i = #evs
     loop {
@@ -251,10 +251,10 @@ func event.check (evs, x, y, w, h) {
                          (mx <= (ev.loc@0 + ev.loc@2 - 1)) && (my <= (ev.loc@1 + ev.loc@3 - 1))
             match ev.activate {
                 6 => {
-                    if event.execute(ev, w, h) { vector.remove(evs, i) }
+                    if event.execute(ev, w) { vector.remove(evs, i) }
                 }
                 5 => {
-                    if w.cleared && event.execute(ev, w, h) { vector.remove(evs, i) }
+                    if w.cleared && event.execute(ev, w) { vector.remove(evs, i) }
                 }
                 3 => {
                     if inside {
@@ -262,12 +262,12 @@ func event.check (evs, x, y, w, h) {
                     } else {
                         if ev.inside {
                             set ev.inside = false
-                            if event.execute(ev, w, h) { vector.remove(evs, i) }
+                            if event.execute(ev, w) { vector.remove(evs, i) }
                         }
                     }
                 }
                 0 => {
-                    if inside && event.execute(ev, w, h) { vector.remove(evs, i) }
+                    if inside && event.execute(ev, w) { vector.remove(evs, i) }
                 }
             }
         }
@@ -276,7 +276,8 @@ func event.check (evs, x, y, w, h) {
 
 ;; MapRenderer::checkHotspots, with the mouse: the first event (in reverse)
 ;; whose hotspot is under the mouse; a click on it, near the hero, runs it
-func event.hotspots (evs, w, h) {
+func event.hotspots (evs, w) {
+    val h = w.hero
     val mx, my = fl.mouse()
     var i = #evs
     loop {
@@ -301,7 +302,7 @@ func event.hotspots (evs, w, h) {
                         return nil
                     }
                     fl.lock(Input.MAIN1, true)
-                    if event.execute(ev, w, h) {
+                    if event.execute(ev, w) {
                         vector.remove(evs, i)
                     }
                 }
@@ -313,7 +314,7 @@ func event.hotspots (evs, w, h) {
 
 ;; MapRenderer::logic: the delays and cooldowns of the events, and the
 ;; delayed events that are due
-func event.logic (evs, w, h) {
+func event.logic (evs, w) {
     loop _, ev in evs {
         if !timer_end(ev.delay) {
             timer_tick(ev.delay)
@@ -329,7 +330,7 @@ func event.logic (evs, w, h) {
         timer_tick(ev.delay)
         if timer_end(ev.delay) {
             set w.skip_delay = true
-            event.execute(ev, w, h)
+            event.execute(ev, w)
             set w.skip_delay = false
             vector.remove(w.delayed, i)
         }

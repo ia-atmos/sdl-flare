@@ -132,7 +132,7 @@ func ai_find_target (e, hero_st) {
         timer_begin(e.cooldown_los)
         val b = ai_power(e, "beacon")
         if b {
-            power_activate(b.id, e, e.x, e.y, e.x, e.y)
+            power_activate(e.cx, b.id, e, e.x, e.y, e.x, e.y)
         }
         val j = ai_power(e, "on_join_combat")
         if j {
@@ -456,7 +456,7 @@ task EPower (e, p) {
             }
         }
         if (anim.is_active(e.cur) || (pw.new_state == "instant")) {
-            power_activate(p.id, e, e.x, e.y, e.pursue@0, e.pursue@1)
+            power_activate(e.cx, p.id, e, e.x, e.y, e.pursue@0, e.pursue@1)
             loop _, q in e.powers {
                 if q.id == p.id {
                     timer_set(q.cd, pw.cooldown)
@@ -549,8 +549,9 @@ func ai_act (e, next) {
     }
 }
 
-task Enemy (st, me) {
+task Enemy (st, me, cx) {
     set pub = [
+        cx = cx,            ;; the context of its map (play_cx)
         name = st.name, x = fl.f32(me.x), y = fl.f32(me.y), dir = me.dir,
         hp = st.hp, hp_max = st.hp, mp = st.mp, base = st.base, speed = st.speed,
         state = if me.state == "spawn" => STATE.SPAWN => STATE.STANCE, movement = st.movement,

@@ -7,11 +7,9 @@
 
 pin loot = [
     tables = [],        ;; path -> entries
-    dropping = [],      ;; the enemies that died in this frame
     drop_max = 1,       ;; of engine/loot.txt
     drop_radius = 1,
     currency = 10,      ;; currency_id of engine/misc.txt
-    ground = [],        ;; the stacks on the map: [id, q, x, y, cur, on_ground]
     autopickup_currency = false,    ;; of engine/loot.txt
     autopickup_range = 1.0,
 ]
@@ -19,14 +17,14 @@ pin loot = [
 ;; LootManager::addLoot: a stack on the map, aligned to 1/16 of a tile,
 ;; merged with a stack of the same item at the same place, or with the
 ;; animation of its item for its quantity
-func loot_add (id, q, x, y) {
+func loot_add (cx, id, q, x, y) {
     val ax = fl.f32(math.floor(fl.f32(x) / 0.0625) * 0.0625)
     val ay = fl.f32(math.floor(fl.f32(y) / 0.0625) * 0.0625)
-    var i = #loot.ground
+    var i = #cx.ground
     loop {
         while i > 0
         set i -= 1
-        val g = loot.ground@i
+        val g = cx.ground@i
         if (g.id == id) && (g.x == ax) && (g.y == ay) {
             set g.q = g.q + q
             return nil
@@ -34,7 +32,7 @@ func loot_add (id, q, x, y) {
     }
     val it = item.get(id)
     ;; built in place, owned by the module
-    val g = vector.insert(loot.ground, [id = id, q = q, x = ax, y = ay, cur = nil, on_ground = true])
+    val g = vector.insert(cx.ground, [id = id, q = q, x = ax, y = ay, cur = nil, on_ground = true])
     if it && (#it.loot_animation > 0) {
         var la = it.loot_animation@(#it.loot_animation - 1)
         loop _, a in it.loot_animation {
@@ -124,7 +122,7 @@ func loot.init () {
 }
 
 ;; LootManager::checkLootComponent: a stack at a free place
-func loot_drop (e, x, y, hero) {
+func loot_drop (cx, e, x, y, hero) {
     val sx, sy = math.floor(x), math.floor(y)
     var px, py = sx + 0.5, sy + 0.5
     if !fl.col_valid(px, py, MOVE.NORMAL, COLLIDE.ALL) {
@@ -140,11 +138,11 @@ func loot_drop (e, x, y, hero) {
     }
     val q = rand_between(e.qmin, e.qmax)
     fl.trace(string.format("loot %d %d %.9g %.9g", e.id, q, fl.f32(px), fl.f32(py)))
-    loot_add(e.id, q, px, py)
+    loot_add(cx, e.id, q, px, py)
 }
 
 ;; LootManager::checkLoot
-func loot_check (list, x, y, hero) {
+func loot_check (cx, list, x, y, hero) {
     val chance = rand_between_f(0, 100)
     ;; the fixed ones drop, and leave the list
     var i = #list
@@ -153,7 +151,7 @@ func loot_check (list, x, y, hero) {
         set i -= 1
         val e = list@i
         if !e.table && (e.chance == 0) {
-            loot_drop(e, x, y, hero)
+            loot_drop(cx, e, x, y, hero)
             vector.remove(list, i)
         }
     }
@@ -176,7 +174,7 @@ func loot_check (list, x, y, hero) {
     }
     if #c.possible > 0 {
         val e = c.possible@(fl.rand() % #c.possible)
-        loot_drop(e, x, y, hero)
+        loot_drop(cx, e, x, y, hero)
         if e.max_drops > 0 {
             set e.max_drops = e.max_drops - 1
         }
@@ -191,16 +189,16 @@ func loot_flying (g) {
 ;; LootManager::checkAutoPickup, with auto_loot on (the default): the last
 ;; stack of currency near the hero, landed, leaves the ground (the alpha
 ;; demo has no item type with auto_pickup); its item and quantity, or nil
-func loot.autopickup (hero) {
-    var i = #loot.ground
+func loot.autopickup (cx, hero) {
+    var i = #cx.ground
     loop {
         while i > 0
         set i -= 1
-        val g = loot.ground@i
+        val g = cx.ground@i
         if (fl.dist(hero.x, hero.y, g.x, g.y) < loot.autopickup_range) && !loot_flying(g) {
             if (g.id == loot.currency) && loot.autopickup_currency {
                 val id, q = g.id, g.q
-                vector.remove(loot.ground, i)
+                vector.remove(cx.ground, i)
                 return id, q
             }
         }
@@ -209,21 +207,14 @@ func loot.autopickup (hero) {
 }
 
 ;; LootManager::addEnemyLoot
-func loot_dropping (e) {
-    ;; what the drops need, copied (the module may not hold an entity): its
-    ;; place, its count, and its loot, which leaves the entity
-    val d = vector.insert(loot.dropping, [x = e.x, y = e.y, loot = [],
-                           loot_count = [e.loot_count@0, e.loot_count@1]])
-    loop _, l in e.loot {
-        set d.loot@+ = X.copy(l)
-    }
-    set e.loot = []
+func loot_dropping (cx, e) {
+    set cx.dropping@+ = e
 }
 
 ;; LootManager::checkEnemiesForLoot, once per frame after the hazards
-func loot.logic (hero) {
+func loot.logic (cx, hero) {
     ;; the flying stacks animate, until they land
-    loop _, g in loot.ground {
+    loop _, g in cx.ground {
         if g.cur {
             anim.advance(g.cur)
             if !g.on_ground && (if g.cur.a.default_active => anim.is_second_last(g.cur) => anim.is_active(g.cur)) {
@@ -231,14 +222,14 @@ func loot.logic (hero) {
             }
         }
     }
-    loop _, en in loot.dropping {
+    loop _, en in cx.dropping {
         if #en.loot > 0 {
             val n = if en.loot_count@1 != 0 => rand_between(en.loot_count@0, en.loot_count@1) => rand_between(1, loot.drop_max)
             loop _ in n {
-                loot_check(en.loot, en.x, en.y, hero)
+                loot_check(cx, en.loot, en.x, en.y, hero)
             }
             set en.loot = []
         }
     }
-    set loot.dropping = []
+    set cx.dropping = []
 }

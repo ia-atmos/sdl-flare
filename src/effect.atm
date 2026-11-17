@@ -128,7 +128,7 @@ func effect_take (e, d) {
         set e.next = if e.hero => [act = HDead] => [act = "dead"]
         if !e.hero {
             fl.col_unblock(e.x, e.y)
-            loot_dropping(e)
+            loot_dropping(e.cx, e)
         }
     }
 }
