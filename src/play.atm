@@ -365,10 +365,9 @@ task Play (path, pos, class) {
     pin h = spawn Hero(st, pos || [0, 0])
 
     spawn {
-        ;; the next map (a variable does not own a table)
-        pin st = [next = [map = path, pos = pos]]
+        pin var next = [map = path, pos = pos]
         loop {
-            set st.next = await MapRun(st.next.map, st.next.pos, h)
+            set next = await MapRun(next.map, next.pos, h)
         }
     }
 

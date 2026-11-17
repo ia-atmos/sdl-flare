@@ -176,8 +176,9 @@ func anim.load (path) {
     var position = 0
     var frames = 0
     var duration = 0
-    ;; the settings of the file so far (a variable does not own a table)
-    pin cfg = [size = [0, 0], offset = [0, 0], active = []]
+    var size = [0, 0]
+    var offset = [0, 0]
+    var active = []
     var type = ""
     var image_id = ""
     var active_sub = ""
@@ -188,9 +189,9 @@ func anim.load (path) {
     val func finish () {
         ;; owned by the set, in its order
         val n = vector.insert(aset.order, anim_new(name, type, st, frames, duration))
-        anim_grid(n, cfg.size, cfg.offset, position, imgs@image_id || first_img, image_id)
-        anim_active(n, cfg.active, active_sub)
-        set cfg.active = []
+        anim_grid(n, size, offset, position, imgs@image_id || first_img, image_id)
+        anim_active(n, active, active_sub)
+        set active = []
         set aset.anims@name = aset.anims@name || n
     }
 
@@ -218,11 +219,11 @@ func anim.load (path) {
                     }
                     "render_size" => {
                         pin l = parse.list(v)
-                        set cfg.size = [parse.int(l@0), parse.int(l@1)]
+                        set size = [parse.int(l@0), parse.int(l@1)]
                     }
                     "render_offset" => {
                         pin l = parse.list(v)
-                        set cfg.offset = [parse.int(l@0), parse.int(l@1)]
+                        set offset = [parse.int(l@0), parse.int(l@1)]
                     }
                     "blend_mode" => {
                         set st.blend = if parse.list(v)@0 == "add" => 1 => 0
@@ -251,20 +252,20 @@ func anim.load (path) {
                     "active_frame" => {
                         pin l = parse.list(v)
                         if l@0 == "all" {
-                            set cfg.active = [-1]
+                            set active = [-1]
                         } else {
                             ;; the frames, sorted, with no repetitions
-                            set cfg.active = []
+                            set active = []
                             loop _, x in l {
                                 if x == "" {
                                     break
                                 }
                                 val n = parse.int(x)
-                                if X.nin(n, cfg.active) {
-                                    set cfg.active@+ = n
+                                if X.nin(n, active) {
+                                    set active@+ = n
                                 }
                             }
-                            vector.sort(cfg.active)
+                            vector.sort(active)
                         }
                     }
                     "active_sub_frame" => {
@@ -277,8 +278,8 @@ func anim.load (path) {
                         if !compressed {
                             set aset.order@+ = anim_new(s.name, type, st, frames, duration)
                             set a = aset.order@(#aset.order - 1)
-                            anim_active(a, cfg.active, active_sub)
-                            set cfg.active = []
+                            anim_active(a, active, active_sub)
+                            set active = []
                             set aset.anims@(s.name) = aset.anims@(s.name) || a
                             set compressed = true
                         }

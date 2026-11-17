@@ -595,13 +595,11 @@ task Enemy (st, me) {
     }
 
     spawn {
-        ;; the next action (a variable does not own a table)
-        pin st = [next = [act = me.state || "stance"]]
+        pin var next = [act = me.state || "stance"]
         loop {
             set e.next = nil
-            val next = st.next
             val act = ai_act(e, next)
-            set st.next = ifs {
+            set next = ifs {
                 next.act == "power" => (await act(e, next.power))
                 next.act == "critdead" => (await act(e, true))
                 next.act == "dead" => (await act(e, false))
