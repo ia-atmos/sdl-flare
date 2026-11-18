@@ -1,118 +1,144 @@
-# TODO: what is pending in the session of the Flare port
+# TODO: what is pending in the session `sdl-flare`
 
-Kept current by the session: an item leaves when it is settled, and one
-comes whenever something is left open. Last review: 2026-11-13, through
-the whole conversation.
+Kept current by the session: an item closes when it is settled, and one
+comes whenever something is left open. Items are `#N` (the standing rule
+of the author of 2026-11-18): a number is unique in this session, taken
+in order, never reused nor changed; an item from another session is
+`session#N` (`atmos-lang#22`). Milestones keep their names (F0 to F9).
+Last review: 2026-11-18, through the whole conversation.
+
+## Index
+
+| # | Title | State |
+|---|-------|-------|
+| #1 | The remotes of the checkouts of the compiler and of this repository | open, waits for the author |
+| #2 | The friction of `pin` with module tables (atmos-lang#40) | partly settled by the rules; experiment in #16 |
+| #3 | When to relax exactness for expressiveness | open, waits for the author |
+| #4 | Going back on the first migration after the relaxed rules of pin | closed: done in the second migration (#15) |
+| #5 | Moved from F5 to F6: game over menu, combat text, transform and block powers | open, work |
+| #6 | F6: items, inventory, HUD, menus, pickup, loot of events, what is not drawn | open, work |
+| #7 | F7: the alpha demo by script, the benchmark of the port, the documents | open, work |
+| #8 | F8 and F9 (the Empyrean Campaign) | open, work |
+| #9 | A leak of 132 KB at the end of the game | open, work |
+| #10 | `await(n, :e)` may replace the task `Frames` | open, work |
+| #11 | Move the platform layer to `ia-atmos/env-sdl` | open, when asked |
+| #12 | The three items of the plan settled as recommended | reported, not acknowledged |
+| #13 | Scope of F5 by the data of the alpha demo | reported, not acknowledged |
+| #14 | Options added to the patch of the original | reported, not acknowledged |
+| #15 | The two migrations to the rules of pin | reported, not acknowledged |
+| #16 | The experiment of a per-map context (branch `exp-map-context`) | open, waits for the author |
+| #17 | Event powers (traps) are queued and never activated | open, work |
+| #18 | Other reports: `until` of the compiler, the corrupted golden, the permission to install | reported, not acknowledged |
 
 ## A. Waiting for an answer of the author
 
-1. **The remote of the compiler checkout.** The compiler moved to
-   `ia-atmos/lang`; `git remote set-url origin
-   https://github.com/ia-atmos/lang` in `../ceu-atmos` was denied by the
-   permission check of the session. Recommended: the author runs it, or
-   allows it. Meanwhile the old address redirects; nothing breaks. The
-   same for this repository, now `ia-atmos/sdl-flare` (was
-   `fsantanna/flare`, then `ia-atmos/flare`): the `origin` of this
-   checkout still names `fsantanna/flare`, and pushes go through the
-   redirect. Recommended: `git remote set-url origin
-   https://github.com/ia-atmos/sdl-flare`.
-2. **The friction of `pin` with module tables** (item 40 of the TODO of
-   `ia-atmos/lang`): a pool's tasks in a global table, a per-map context
-   in a module, a task in its own `pub`. Recommended, in order: the error
-   naming the destination of the escape (cheap); a binding of a module
-   field for the lifetime of a block. Meanwhile: arguments, or one
-   pinned context table (`doc/compiler.md`).
+#1 **The remotes of the checkouts.** The compiler moved to `ia-atmos/lang`;
+`git remote set-url origin https://github.com/ia-atmos/lang` in
+`../ceu-atmos` was denied by the permission check of the session. The
+same for this repository, now `ia-atmos/sdl-flare` (was `fsantanna/flare`,
+then `ia-atmos/flare`): its `origin` still names `fsantanna/flare`.
+Pushes and pulls go through the redirects; nothing breaks.
+- #1a (recommended) the author runs both `git remote set-url`, or allows them.
+- #1b leave them: the redirects work.
 
-3a. **When to relax exactness for expressiveness** (the rule of the
-    author of 2026-11-14, relayed by the compiler session: allowed once a
-    port is fully faithful, keeping the intent of the original). Where
-    Flare stands: the 30 stored runs (walks, a fight, duels and stands in
-    13 maps) give the same trace as the original, draws included, and the
-    enemies and hazards the same pixels; but the slice is not complete
-    (F5 to F7 open), so the rule of the plan still holds: a difference
-    is a defect. Recommended: relax only after F7 (the alpha demo played
-    by script, identical end to end), with a tag on the faithful commit,
-    one small commit per relaxation, and a list of deliberate
-    differences in `doc/fidelity.md`; not mixed with the move to
-    `env-sdl`. Candidates then: the AI timers and flags kept as state
-    only to keep the order of the draws (`doc/state.md`), and the hidden
-    draws of the original. To ask the author before any of it.
+#3 **When to relax exactness for expressiveness** (the rule of the author
+of 2026-11-14: allowed once a port is fully faithful, keeping the intent
+of the original). Where Flare stands: the 31 stored runs (walks, a
+fight, duels, stands, and a pickup in 13 maps) give the same trace as the
+original, draws included, and enemies, hazards, and loot the same pixels;
+but the slice is not complete (F6, F7 open), so a difference is still a
+defect.
+- #3a (recommended) relax only after F7 (the alpha demo played by script,
+  identical end to end), with a tag on the faithful commit, one small
+  commit per relaxation, and a list of deliberate differences in
+  `doc/fidelity.md`; not mixed with #11. Candidates then: the AI timers
+  and flags kept as state only for the order of the draws
+  (`doc/state.md`), and the hidden draws of the original.
+- #3b relax now, piece by piece.
 
-3b. (Done: the holder tables are gone, see 14c.) **The rules of pin relaxed on 2026-11-17** (`val`/`var` may hold a
-    fresh value again; a place that owns its value may be reassigned).
-    Going back on parts of the migration (the in-place idioms, the holder
-    tables of `st.next`) is allowed, not required: to ask the author.
-    Recommended: keep the code as it is until the regression below is
-    settled, then revert only the holder tables, which read as noise.
-    The regression of `0ba7afc` (AI power entries finalized while held)
-    was fixed in `f3389f6`: the full suite passes with `main` again.
+#16 **The experiment of a per-map context** (asked by the author through
+atmos-pin): everything that lives for one map in one table pinned by
+`MapRun`. On the branch `exp-map-context` (dc92020), tests identical,
+-32 lines; four of the five ids and copies of #2 disappear; the hero,
+outer to every map, sends its powers and its check of events to the map
+as requests. Reported to atmos-pin.
+- #16a (recommended) merge it into `main` (rebased on the second
+  migration, tests checked again).
+- #16b keep it as a branch for the study only.
 
 ## B. Known work, not done
 
-3. (F5 closed: its logic matches on the 30 runs.) Moved to F6: the game
-   over menu (continue: teleport to the respawn map, the death penalty
-   of the inventory), the combat text, and the powers of types transform
-   and block (only the hero's).
-4. F6: items and inventory, the HUD and menus of the slice, loot picked
-   up, the loot of events (chests: `checkMapForLoot`, not executed yet),
-   the automatic pickup of currency; on screen (the loot on the ground
-   is drawn since 2026-11-14): the layers of the hero (equipment), NPCs (the captured trader of
-   `cave1`), the animations of effects on entities (shield, heal).
-5. F7: the alpha demo played by script, end to end; the benchmark of the
-   port against `doc/bench.md` (no number of the port is measured yet);
-   the documents.
-6. F8 and F9, as in the plan (the Empyrean Campaign: its menus, parallax
-   layers, fog of war).
-7. A leak of 132 KB at the end of the game (`ATMOS_ASAN=1` on `fight`),
-   from the animation sets of `anim.cache`: to find the cycle.
-8. `await(n, :e)` of the compiler may replace the task `Frames` and the
-   frame counters of the port.
+#5 Moved from F5 to F6 (F5 closed: its logic matches on the runs): the
+game over menu (continue: teleport to the respawn map, the death penalty
+of the inventory), the combat text, and the powers of types transform and
+block (only the hero's).
 
-10a. To come: move the platform part of the layer (window, images,
-    fonts, sounds, input, the test mode of `engine/flare.h` and
-    `engine/engine.atm`) to the shared environment `ia-atmos/env-sdl`,
-    when asked (Flare is planned third, after Pingus and SNKRX), with
-    the golden outputs identical; the game part (`astar.h`,
-    `collision.h`, `map.h`, `geom.h`) stays. Meanwhile, keep new
-    platform code apart from game code, and answer the questions of the
-    session `env-sdl` about the layer.
+#6 F6: items and inventory, the HUD and menus of the slice, loot picked up
+with a click (`checkPickup`), the loot of events (chests:
+`checkMapForLoot`, not executed yet); on screen: the layers of the hero
+(equipment), NPCs (the captured trader of `cave1`), the animations of
+effects on entities (shield, heal). Done: the loot on the ground is drawn,
+and currency is picked up automatically (run `pickup-goblin_warrens`).
+
+#7 F7: the alpha demo played by script, end to end; the benchmark of the
+port against `doc/bench.md` (measured so far: about 11.3 s of CPU and
+199 MB for the 900 frames of the run `fight`, with no comparison yet);
+the documents.
+
+#8 F8 and F9, as in the plan (the Empyrean Campaign: its menus, parallax
+layers, fog of war).
+
+#9 A leak of 132 KB at the end of the game (`ATMOS_ASAN=1` on `fight`),
+from the animation sets of `anim.cache`: to find the cycle (the compiler
+breaks cycles of unpinned values since `7480111`: to measure again).
+
+#10 `await(n, :e)` of the compiler may replace the task `Frames` and the
+frame counters of the port.
+
+#11 To come, when asked: move the platform part of the layer (window,
+images, fonts, sounds, input, the test mode of `engine/flare.h` and
+`engine/engine.atm`) to `ia-atmos/env-sdl` (Flare third, after Pingus and
+SNKRX), with the golden outputs identical; the game part (`astar.h`,
+`collision.h`, `map.h`, `geom.h`) stays. The scripted input will need a
+converter to the form of the environment. Meanwhile, new platform code is
+kept apart from game code.
+
+#17 The events with `power=` (traps) put their power in the requests of the
+world (`powers`), and nothing activates them; no stored run reaches one.
+To port `MapRenderer`'s activation of event powers, with a run.
 
 ## C. Reported or decided, not acknowledged
 
-10. The three items of the plan marked to confirm (slice, data read as
-    is, fidelity by trace) were settled as the plan recommended, after
-    "Faça tudo o que for preciso. Vá em frente" (`doc/decisions.md`).
-11. Scope of F5 by the data of the alpha demo: its enemies use only
-    melee and ranged AI powers (no on_hit, half_dead, on_death, debuff),
-    and none can flee; those parts are not ported. Drawing loot, the
-    hero's layers, NPCs, and effect animations moved from F5 to F6.
-12. The patch of the original gained `FLARE_DUMPE`, `FLARE_NOHUD`, and
-    `FLARE_NOHERO` (trace and screenshots only; no change of behavior).
-13. The compiler: the values of `until <cnd>, <vals>` are evaluated with
-    the condition, unlike the reading of the manual
-    (`doc/compiler.md`); not known whether the compiler session took it.
-14. The golden output of the runs was committed corrupted once (two
-    writers at the same time) and restored in `fe3e438`; the suite and
-    its update are now run one after the other.
+#2 The friction of `pin` with module tables (atmos-lang#40): the rules of
+2026-11-17 removed the holder tables; the five entities kept by modules
+as ids or copies remain on `main` (#16 removes four).
 
-14a. F5 was closed with the game over menu and the combat text moved
-     to F6 (they are of the HUD and the menus).
+#4 Closed: the holder tables of the first migration were removed in the
+second (#15).
 
-14b. The migration to the new rules of pin (2026-11-16) is done:
-     identical traces, pixels, and dumps; the report went to the session
-     of the compiler. Entities that modules kept are now ids or copies
-     (hazard sources, summoners, the last enemy hit, the loot of a dead
-     enemy, the enemy under the mouse): a weak reference would undo it.
+#12 The three items of the plan marked to confirm (slice, data read as is,
+fidelity by trace) were settled as the plan recommended, after "Faça tudo
+o que for preciso. Vá em frente" (`doc/decisions.md`).
 
-14c. The second migration to the rules of pin (2026-11-17, stable) is
-     done, identical tests; the report went to the compiler session.
-     The experiment of a per-map context owned by MapRun is on the branch
-     `exp-map-context` (identical tests; removes four of the five ids
-     and copies of case E; the hero sends requests to the map): reported
-     to the session on the rules of pin; not merged, for the author.
+#13 Scope of F5 by the data of the alpha demo: its enemies use only melee
+and ranged AI powers (no on_hit, half_dead, on_death, debuff), and none
+can flee; those parts are not ported. F5 was closed with drawing (loot,
+hero's layers, NPCs, effect animations), the game over menu, and the
+combat text moved to F6.
 
-## D. Older
+#14 The patch of the original gained `FLARE_DUMPE`, `FLARE_NOHUD`,
+`FLARE_NOHERO`, and the trace line `pickup` (trace and screenshots only;
+no change of behavior).
 
-15. The permission to install packages (SDL2 development files, `time`)
-    was asked and given at the start; settled, kept here for the record
-    until acknowledged as seen.
+#15 The two migrations to the rules of pin (2026-11-16 and 2026-11-17) are
+done, with identical traces, pixels, and dumps; the reports went to the
+compiler session (now atmos-lang; pin is now atmos-pin). Two defects of
+the compiler found and fixed on the way (`0ba7afc`, the crash of a boxed
+`pin var`).
+
+#18 Other reports: the values of `until <cnd>, <vals>` are evaluated with
+the condition, unlike the reading of the manual (`doc/compiler.md`); the
+golden output of the runs was committed corrupted once (two writers) and
+restored in `fe3e438`, and the suite and its update now run one after the
+other; the permission to install packages (SDL2 development files,
+`time`) was asked and given at the start.
