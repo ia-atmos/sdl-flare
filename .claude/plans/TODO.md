@@ -65,6 +65,10 @@ as requests. Reported to atmos-pin.
 - #16a (recommended) merge it into `main` (rebased on the second
   migration, tests checked again).
 - #16b keep it as a branch for the study only.
+- #16c keep `main` as it is and use `set :out` (ia-atmos/lang 8361f88,
+  atmos-pin#1) where a module or the hero must refer to an entity of a
+  map: the place returns to nil when the map ends. Smaller than #16a,
+  but it keeps the per-map state in module tables.
 
 ## B. Known work, not done
 
