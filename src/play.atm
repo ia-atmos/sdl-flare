@@ -201,7 +201,7 @@ func play_check_events (h) {
 
 ;; The world of a map: what its events and its entities request in a frame
 func play_world () {
-    [teleport = nil, spawns = [], powers = [], delayed = [],
+    [teleport = nil, spawns = [], delayed = [],
      skip_delay = false, cleared = false]
 }
 

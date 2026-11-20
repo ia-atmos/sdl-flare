@@ -132,6 +132,7 @@ func event.load (m) {
                 set ev.stats = [
                     x = fl.f32(sx), y = fl.f32(sy), dir = 0, hp = 1.0, hero = false,
                     melee_range = 1.0, perfect_accuracy = true,
+                    cd = timer(0),      ;; the cooldown of its power (powers_ai[0])
                     base = [dmg_melee_min = dmin, dmg_melee_max = dmax, dmg_ranged_min = dmin,
                             dmg_ranged_max = dmax, dmg_ment_min = dmin, dmg_ment_max = dmax],
                 ]
@@ -145,9 +146,20 @@ func event.load (m) {
 }
 
 ;; CampaignManager::checkRequirementsInVector (statuses only, for now)
-func event_active (ev) {
+func event_active (ev, h) {
     var ok = true
     loop _, c in ev.comps {
+        ;; CampaignManager::checkItem: carried or equipped; the port has no
+        ;; inventory yet, only the currency of the hero
+        if c.type == "requires_item" {
+            val l = string.split(c.s, ":")
+            val id = parse.int(l@0)
+            val q = if l@1 => parse.int(l@1) => 1
+            val have = if id == loot.currency => (h.currency || 0) => 0
+            if have < q {
+                set ok = false
+            }
+        }
         if (c.type == "requires_status") && !campaign.status@(c.s) {
             set ok = false
         }
@@ -170,7 +182,9 @@ func event.execute (ev, w, h) {
     }
     if (ev.delay.dur > 0) && !w.skip_delay {
         timer_begin(ev.delay)
-        set w.delayed@+ = X.copy(ev)
+        ;; a copy, with the same StatBlock (the source of its power)
+        val cp = vector.insert(w.delayed, X.copy(ev))
+        set cp.stats = ev.stats
         timer_begin(ev.cooldown)
         return !ev.keep
     }
@@ -214,7 +228,13 @@ func event.execute (ev, w, h) {
                         }
                     }
                 }
-                set w.powers@+ = [ev = ev, id = c.id, x = tx, y = ty]
+                ;; MapRenderer::activatePower: from the StatBlock of the
+                ;; event, when its cooldown has ended
+                val st = ev.stats
+                if timer_end(st.cd) {
+                    timer_set(st.cd, power.get(c.id).cooldown)
+                    power_activate(c.id, st, st.x, st.y, tx, ty)
+                }
             }
         }
     }
@@ -229,7 +249,7 @@ func event.on_load (evs, w, h) {
             while i > 0
             set i -= 1
             val ev = evs@i
-            if event_active(ev) && (ev.activate == act) {
+            if event_active(ev, h) && (ev.activate == act) {
                 if event.execute(ev, w, h) {
                     vector.remove(evs, i)
                 }
@@ -246,7 +266,7 @@ func event.check (evs, x, y, w, h) {
         while i > 0
         set i -= 1
         val ev = evs@i
-        if event_active(ev) {
+        if event_active(ev, h) {
             val inside = (mx >= ev.loc@0) && (my >= ev.loc@1) &&
                          (mx <= (ev.loc@0 + ev.loc@2 - 1)) && (my <= (ev.loc@1 + ev.loc@3 - 1))
             match ev.activate {
@@ -283,7 +303,7 @@ func event.hotspots (evs, w, h) {
         while i > 0
         set i -= 1
         val ev = evs@i
-        if event_active(ev) && (ev.hotspot@3 != 0) && timer_end(ev.cooldown) && timer_end(ev.delay) {
+        if event_active(ev, h) && (ev.hotspot@3 != 0) && timer_end(ev.cooldown) && timer_end(ev.delay) {
             var matched = false
             loop x in (ev.hotspot@0, ev.hotspot@0 + ev.hotspot@2 - 1) {
                 loop y in (ev.hotspot@1, ev.hotspot@1 + ev.hotspot@3 - 1) {
@@ -314,6 +334,12 @@ func event.hotspots (evs, w, h) {
 ;; MapRenderer::logic: the delays and cooldowns of the events, and the
 ;; delayed events that are due
 func event.logic (evs, w, h) {
+    ;; the cooldowns of the powers of the events
+    loop _, ev in evs {
+        if ev.stats {
+            timer_tick(ev.stats.cd)
+        }
+    }
     loop _, ev in evs {
         if !timer_end(ev.delay) {
             timer_tick(ev.delay)
