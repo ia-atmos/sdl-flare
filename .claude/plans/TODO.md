@@ -68,7 +68,14 @@ as requests. Reported to atmos-pin.
 - #16c keep `main` as it is and use `set :out` (ia-atmos/lang 8361f88,
   atmos-pin#1) where a module or the hero must refer to an entity of a
   map: the place returns to nil when the map ends. Smaller than #16a,
-  but it keeps the per-map state in module tables.
+  but it keeps the per-map state in module tables. Tried on the branch `exp-set-out` (5a29b27,
+  by the session, to be confirmed): it serves one of the five places,
+  the hero's enemy under the mouse (set in the block of `MapRun`); it
+  does not serve the places set inside module functions (the last enemy
+  hit, a hazard's source, a summoner, the dead that drop): there the
+  place returns to nil when the function returns, which the traces did
+  not show (the focus is not tested by a run where it matters). So #16a
+  remains the recommendation.
 
 ## B. Known work, not done
 
