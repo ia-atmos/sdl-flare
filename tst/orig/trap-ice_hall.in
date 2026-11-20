@@ -1,0 +1,2 @@
+# env: FLARE_MAP=maps/brothers_lair_ice_hall.txt FLARE_POS=14.5,10.5 FLARE_FRAMES=400 FLARE_RNG=1
+# on the trap of the ice hall (14,10), standing: its freeze, again after its cooldown
