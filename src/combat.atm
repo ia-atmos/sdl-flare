@@ -318,9 +318,11 @@ func take_hit (t, hz, src) {
     val accuracy = hz.accuracy
     val avoidance = stat(t, "avoidance")
     var true_avoidance = fl.f32(100 - fl.f32(accuracy - avoidance))
-    val overhit = if true_avoidance < 0 => percent_f(math.abs(true_avoidance)) => false
+    ;; a source of perfect accuracy (the StatBlock of an event) draws neither
+    val perfect = src && src.perfect_accuracy
+    val overhit = if (true_avoidance < 0) && !perfect => percent_f(math.abs(true_avoidance)) => false
     set true_avoidance = math.min(math.max(true_avoidance, 0), 100)
-    val missed = percent_f(true_avoidance)
+    val missed = !perfect && percent_f(true_avoidance)
     ;; the damage of each type
     var dmg = 0.0
     loop i, d in hz.damage {
