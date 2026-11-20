@@ -75,7 +75,11 @@ as requests. Reported to atmos-pin.
   hit, a hazard's source, a summoner, the dead that drop): there the
   place returns to nil when the function returns, which the traces did
   not show (the focus is not tested by a run where it matters). So #16a
-  remains the recommendation.
+  remains the recommendation. With the alternative of atmos-pin#16 (the place
+  ends with the value, branch `pin-out` of ia-atmos/lang, not approved):
+  all five places are `set :out` (branch `exp-pin-out`, b74b904), the
+  ids and copies go, traces identical, no slowdown; it depends on his
+  decision of atmos-pin#16.
 
 ## B. Known work, not done
 
