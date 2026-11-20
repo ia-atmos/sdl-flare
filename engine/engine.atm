@@ -315,9 +315,3 @@ pin fl = [
     },
 ]
 
-;; awaits n logic frames
-task Frames (n) {
-    loop _ in n {
-        await :frame
-    }
-}
