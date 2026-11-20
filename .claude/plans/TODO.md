@@ -19,7 +19,7 @@ Last review: 2026-11-18, through the whole conversation.
 | #6 | F6: items, inventory, HUD, menus, pickup, loot of events, what is not drawn | open, work |
 | #7 | F7: the alpha demo by script, the benchmark of the port, the documents | open, work |
 | #8 | F8 and F9 (the Empyrean Campaign) | open, work |
-| #9 | A leak of 132 KB at the end of the game | open, work |
+| #9 | A leak of 132 KB at the end of the game | closed: gone |
 | #10 | `await(n, :e)` may replace the task `Frames` | closed: done |
 | #11 | Move the platform layer to `ia-atmos/env-sdl` | open, when asked |
 | #12 | The three items of the plan settled as recommended | reported, not acknowledged |
@@ -92,9 +92,10 @@ the documents.
 #8 F8 and F9, as in the plan (the Empyrean Campaign: its menus, parallax
 layers, fog of war).
 
-#9 A leak of 132 KB at the end of the game (`ATMOS_ASAN=1` on `fight`),
-from the animation sets of `anim.cache`: to find the cycle (the compiler
-breaks cycles of unpinned values since `7480111`: to measure again).
+#9 Closed: `ATMOS_ASAN=1` reports no leak on the whole runs `fight` (900
+frames) and `maps` (400 frames, map changes), with ia-atmos/lang c4e99c4
+(cycles of unpinned values broken since 7480111) and the two
+migrations (no module keeps an entity).
 
 #10 Closed: the task `Frames` is gone; its one use is `await(10, :frame)`.
 The counters of frames of the game are timers of the original, kept.

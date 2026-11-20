@@ -153,8 +153,5 @@ where they come from.
 
 ## Open
 
-- `ATMOS_ASAN=1` on the fight run reports 132 KB in 1030 allocations not
-  freed at the end, from the animation sets of `anim.cache`
-  (`src/anim.atm`). The unit tests of animations do not leak: it comes
-  with the game (a cycle through the pubs of tasks kept in global
-  tables, such as `combat.last_enemy`, `play.world`?). To find out.
+- (Closed) The leak of 132 KB at the end of the game is gone: no leak
+  under `ATMOS_ASAN=1` on `fight` and `maps` (2026-11-20).
