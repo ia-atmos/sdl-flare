@@ -20,7 +20,7 @@ Last review: 2026-11-18, through the whole conversation.
 | #7 | F7: the alpha demo by script, the benchmark of the port, the documents | open, work |
 | #8 | F8 and F9 (the Empyrean Campaign) | open, work |
 | #9 | A leak of 132 KB at the end of the game | open, work |
-| #10 | `await(n, :e)` may replace the task `Frames` | open, work |
+| #10 | `await(n, :e)` may replace the task `Frames` | closed: done |
 | #11 | Move the platform layer to `ia-atmos/env-sdl` | open, when asked |
 | #12 | The three items of the plan settled as recommended | reported, not acknowledged |
 | #13 | Scope of F5 by the data of the alpha demo | reported, not acknowledged |
@@ -96,8 +96,8 @@ layers, fog of war).
 from the animation sets of `anim.cache`: to find the cycle (the compiler
 breaks cycles of unpinned values since `7480111`: to measure again).
 
-#10 `await(n, :e)` of the compiler may replace the task `Frames` and the
-frame counters of the port.
+#10 Closed: the task `Frames` is gone; its one use is `await(10, :frame)`.
+The counters of frames of the game are timers of the original, kept.
 
 #11 To come, when asked: move the platform part of the layer (window,
 images, fonts, sounds, input, the test mode of `engine/flare.h` and
