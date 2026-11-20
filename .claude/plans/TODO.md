@@ -27,7 +27,7 @@ Last review: 2026-11-18, through the whole conversation.
 | #14 | Options added to the patch of the original | reported, not acknowledged |
 | #15 | The two migrations to the rules of pin | reported, not acknowledged |
 | #16 | The experiment of a per-map context (branch `exp-map-context`) | open, waits for the author |
-| #17 | Event powers (traps) are queued and never activated | open, work |
+| #17 | Event powers (traps) are queued and never activated | closed: done |
 | #18 | Other reports: `until` of the compiler, the corrupted golden, the permission to install | reported, not acknowledged |
 
 ## A. Waiting for an answer of the author
@@ -107,9 +107,11 @@ SNKRX), with the golden outputs identical; the game part (`astar.h`,
 converter to the form of the environment. Meanwhile, new platform code is
 kept apart from game code.
 
-#17 The events with `power=` (traps) put their power in the requests of the
-world (`powers`), and nothing activates them; no stored run reaches one.
-To port `MapRenderer`'s activation of event powers, with a run.
+#17 Closed: the power of an event is activated at once from its StatBlock,
+when its cooldown has ended (`MapRenderer::activatePower`); the run
+`trap-ice_hall` (a booby-trapped chest) matches the original. On the way:
+a source of perfect accuracy no longer draws for overhit and miss, and
+`requires_item` is checked (against the currency, until the inventory).
 
 ## C. Reported or decided, not acknowledged
 
