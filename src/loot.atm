@@ -210,14 +210,7 @@ func loot.autopickup (hero) {
 
 ;; LootManager::addEnemyLoot
 func loot_dropping (e) {
-    ;; what the drops need, copied (the module may not hold an entity): its
-    ;; place, its count, and its loot, which leaves the entity
-    val d = vector.insert(loot.dropping, [x = e.x, y = e.y, loot = [],
-                           loot_count = [e.loot_count@0, e.loot_count@1]])
-    loop _, l in e.loot {
-        set d.loot@+ = X.copy(l)
-    }
-    set e.loot = []
+    set :out loot.dropping@(#loot.dropping) = e
 }
 
 ;; LootManager::checkEnemiesForLoot, once per frame after the hazards
