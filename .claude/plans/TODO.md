@@ -94,7 +94,12 @@ and currency is picked up automatically (run `pickup-goblin_warrens`).
 #7 F7: the alpha demo played by script, end to end; the benchmark of the
 port against `doc/bench.md` (measured so far: about 11.3 s of CPU and
 199 MB for the 900 frames of the run `fight`, with no comparison yet);
-the documents.
+the documents. For the paper (paper-games#4, through atmos-lang):
+memory and CPU of the port against the original on the same scripted
+runs; the size in lines of both; and the CPU of the game logic alone,
+with the rasterizer and the presentation skipped in both alike (CPU
+time of the process, median of 3 runs, ms per frame and the ratio,
+beside the whole-frame number), `doc/bench.md` saying what is skipped.
 
 #8 F8 and F9, as in the plan (the Empyrean Campaign: its menus, parallax
 layers, fog of war).
