@@ -107,9 +107,7 @@ func play.focus (h, ens) {
             }
         }
     }
-    ;; its position (the hero is outer to the enemies of a map, and nothing
-    ;; moves them before the hero aims in this frame)
-    set h.cursor_enemy = if enemy => [enemy.x, enemy.y] => nil
+    enemy
 }
 
 ;; MenuActionBar::checkAction, for the main buttons of the mouse: the power
@@ -317,7 +315,9 @@ task MapRun (path, pos, h) {
         if hp.hp > 0 {
             event.hotspots(play.events, w, hp)
         }
-        play.focus(hp, ens)
+        ;; the hero, outer to the map, refers to the enemy under the mouse
+        ;; while this map lives (the place returns to nil when it ends)
+        set :out hp.cursor_enemy = play.focus(hp, ens)
         play.actions(hp)
         emit @h :hero.logic
         fl.rand()                       ;; handleSpawn: Map_Enemy()
