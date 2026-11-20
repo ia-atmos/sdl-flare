@@ -159,6 +159,7 @@ func power_activate (id, src, ox, oy, tx0, ty0) {
                 loop _ in pw.count {
                     ;; created in the queue of the module, which owns it
                     val hz = vector.insert(combat.new, hazard_new(id, pw, src, ox, oy, tx, ty))
+                    set :out hz.src = src
                     set hz.delay = delay
                     set delay += pw.delay
                 }
@@ -174,6 +175,7 @@ func power_activate (id, src, ox, oy, tx0, ty0) {
             loop i in pw.count {
                 ;; created in the queue of the module, which owns it
                 val hz = vector.insert(combat.new, hazard_new(id, pw, src, ox, oy, tx, ty))
+                set :out hz.src = src
                 val cnt, ang = pw.count, pw.missile_angle
                 val off = `:number.float (double)(((1.0f - (float)a_dbl($cnt)) / 2 + (float)a_dbl($i)) * ((float)a_dbl($ang) * (float)M_PI / 180.0f))`
                 var variance = 0.0
@@ -220,6 +222,7 @@ func power_activate (id, src, ox, oy, tx0, ty0) {
                 until wall && (i > 0)
                 ;; created in the queue of the module, which owns it
                 val hz = vector.insert(combat.new, hazard_new(id, pw, src, ox, oy, tx, ty))
+                set :out hz.src = src
                 set hz.x, hz.y = lx, ly
                 set hz.delay = delay
                 set delay += pw.delay
@@ -254,7 +257,8 @@ func power_activate (id, src, ox, oy, tx0, ty0) {
             val dir = fl.direction(ox, oy, tx, ty)
             fl.col_block(px, py, src.hero)
             loop _ in pw.count {
-                play_spawn_request([type = pw.spawn_type, x = fl.f32(px), y = fl.f32(py), dir = dir, summoner = play_id(src)])
+                val sp = play_spawn_request([type = pw.spawn_type, x = fl.f32(px), y = fl.f32(py), dir = dir])
+                set :out sp.summoner = src
             }
             power_buff(id, pw, src, tx, ty)
             true
@@ -467,7 +471,7 @@ func hazards_logic (ens, hero) {
                     loop _, c in hz.power.chain {
                         if (c.type == "wall_power") && percent_f(c.chance) {
                             val n = #combat.new
-                            power_activate(c.id, combat_src(hz, ens, hero), hz.x, hz.y, hz.x, hz.y)
+                            power_activate(c.id, hz.src, hz.x, hz.y, hz.x, hz.y)
                             if power.get(c.id).directional && (#combat.new > n) {
                                 set combat.new@(#combat.new - 1).dir = hz.dir
                             }
@@ -485,9 +489,9 @@ func hazards_logic (ens, hero) {
                 } else {
                     if (e.hp > 0) && hz.active && (fl.dist(hz.x, hz.y, e.x, e.y) < hz.power.radius) && X.nin(e.id, hz.hit) {
                         set hz.hit@+ = e.id
-                        val hit = take_hit(e, hz, combat_src(hz, ens, hero))
+                        val hit = take_hit(e, hz, hz.src)
                         if !hz.power.beacon {
-                            set combat.last_enemy = e.id
+                            set :out combat.last_enemy = e
                         }
                         if hit && !hz.power.multitarget {
                             set hz.active = false
@@ -502,7 +506,7 @@ func hazards_logic (ens, hero) {
                 val h = hero
                 if (h.hp > 0) && hz.active && (fl.dist(hz.x, hz.y, h.x, h.y) < hz.power.radius) && X.nin(0, hz.hit) {
                     set hz.hit@+ = 0
-                    if take_hit(h, hz, combat_src(hz, ens, hero)) && !hz.power.multitarget {
+                    if take_hit(h, hz, hz.src) && !hz.power.multitarget {
                         set hz.active = false
                         if !hz.power.complete_animation {
                             set hz.lifespan = 0

@@ -84,11 +84,7 @@ func play.bounds (e) {
 func play.focus (h, ens) {
     var enemy = nil
     if combat.last_enemy {
-        loop _, t in ens {
-            if t.pub.id == combat.last_enemy {
-                set enemy = t.pub
-            }
-        }
+        set enemy = combat.last_enemy
         set combat.last_enemy = nil
     } else {
         val mx, my = fl.mouse()
@@ -166,7 +162,7 @@ func play_id (p) {
 ;; a spawn to the queue of the next handleSpawn (PowerManager::map_enemies)
 func play_spawn_request (sp) {
     if play.world {
-        set play.world.spawns@+ = sp
+        vector.insert(play.world.spawns, sp)
     }
 }
 
@@ -215,12 +211,9 @@ func play_spawns (w, es, ens) {
                 set ens@+ = t
             ;; the summoner, by its id (the world of the module holds no
             ;; entity): its summons die with it
-            loop _, st in ens {
-                val s = st.pub
-                if (sp.summoner != nil) && (s.id == sp.summoner) {
-                    set s.summons = s.summons || []
-                    set s.summons@+ = t.pub
-                }
+            if sp.summoner {
+                set sp.summoner.summons = sp.summoner.summons || []
+                set sp.summoner.summons@+ = t.pub
             }
             fl.col_block(sp.x, sp.y, false)
         }
