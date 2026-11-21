@@ -81,6 +81,20 @@ task Effect (e, fx) {
             vector.remove(e.fx_live, k)
         }
     }
+    ;; a shield: its charge, until it is spent
+    set e.shields = e.shields || []
+    val sh = if fx.type == "shield" => vector.insert(e.shields, [m = fx.m, max = fx.m]) => nil
+    defer {
+        var k = nil
+        loop i, x in e.shields {
+            if x == sh {
+                set k = i
+            }
+        }
+        if k != nil {
+            vector.remove(e.shields, k)
+        }
+    }
     spawn {
         loop on :fx.logic {
             if v && !anim_completed(v.cur) {
@@ -102,6 +116,8 @@ task Effect (e, fx) {
         if fx.dur == 0 {
             loop on :fx.logic {
                 status(0)
+                ;; a shield spent ends (EffectManager::logic)
+                until sh && (sh.max > 0) && (sh.m == 0)
             }
         } else {
             ;; ticked in each logic after the one that sets the status
@@ -112,6 +128,23 @@ task Effect (e, fx) {
             await :fx.logic
         }
     }
+}
+
+;; EffectManager::damageShields: the damage that the shields do not take
+func effect_shields (e, dmg) {
+    var over = dmg
+    loop _, s in e.shields || [] {
+        if s.max > 0 {
+            set s.m = fl.f32(s.m - over)
+            if s.m < 0 {
+                set over = math.abs(s.m)
+                set s.m = 0.0
+            } else {
+                return 0.0
+            }
+        }
+    }
+    over
 }
 
 ;; Animation::isCompleted
@@ -152,7 +185,7 @@ func effect.damage (e) {
 
 ;; StatBlock::takeDamage of an effect
 func effect_take (e, d) {
-    set e.hp = fl.f32(e.hp - d)
+    set e.hp = fl.f32(e.hp - effect_shields(e, d))
     if e.hp <= 0 {
         set e.hp = 0.0
         set e.state = STATE.DEAD
