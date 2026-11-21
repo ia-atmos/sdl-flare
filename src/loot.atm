@@ -214,6 +214,41 @@ func loot.autopickup (hero) {
     nil
 }
 
+;; LootManager::checkPickup, with the mouse: the last stack landed whose
+;; tile is under the mouse, near the hero (interact_range of 3), with a
+;; press of MAIN1; its item and quantity, or nil. Not ported: a click on
+;; the tooltip of a stack (the tooltips are of the HUD), mouse-move, and
+;; the pickup of the nearest stack with ACCEPT.
+func loot.pickup (hero) {
+    val mx, my = fl.mouse()
+    val cx, cy = fl.cam()
+    val tw, th = fl.tile()
+    var m = nil
+    var i = #loot.ground
+    loop {
+        while i > 0
+        set i -= 1
+        val g = loot.ground@i
+        if (m == nil) && !loot_flying(g) {
+            val sx, sy = fl.map2scr(g.x, g.y, cx, cy)
+            val rx, ry = sx - (tw // 2), sy - (th // 2)
+            if (mx >= rx) && (my >= ry) && (mx < (rx + tw)) && (my < (ry + th)) {
+                set m = i
+            }
+        }
+    }
+    if m != nil {
+        val g = loot.ground@m
+        if (fl.dist(hero.x, hero.y, g.x, g.y) < 3) && fl.pressed(Input.MAIN1) {
+            fl.lock(Input.MAIN1, true)
+            val id, q = g.id, g.q
+            vector.remove(loot.ground, m)
+            return id, q
+        }
+    }
+    nil
+}
+
 ;; LootManager::addEnemyLoot
 func loot_dropping (e) {
     set :out loot.dropping@(#loot.dropping) = e

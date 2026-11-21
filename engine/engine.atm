@@ -173,6 +173,10 @@ pin fl = [
     cam_logic = func () {
         `fl_cam_logic();`
     },
+    ;; the size of a tile on the screen (the tileset's tile_size)
+    tile = func () {
+        return `:number FL_TILE_W`, `:number FL_TILE_H`
+    },
     cam = func () {
         return `:number.float (double)FL_CAM.x`, `:number.float (double)FL_CAM.y`
     },
