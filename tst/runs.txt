@@ -32,3 +32,4 @@ stand-cave_goblins
 stand-cave_minotaur
 pickup-goblin_warrens
 trap-ice_hall
+chest-ancient_temple

@@ -1,0 +1,7 @@
+# env: FLARE_MAP=maps/ancient_temple.txt FLARE_POS=15.5,72.5 FLARE_FRAMES=200 FLARE_RNG=1
+# open a chest with a click, then walk onto its gold
+20 move 885 448
+20 down 1
+24 up 1
+70 key W
+85 keyup W
