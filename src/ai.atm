@@ -588,8 +588,9 @@ task Enemy (st, me) {
     }
     set e.cur = anim.cursor(anim.get(e.anims, ""))
     ;; EntityManager::loadEntity: with no cooldown_hit in its file, the
-    ;; cooldown of a hit is the duration of the hit animation, from full
-    if !st.set_by_file.cooldown_hit {
+    ;; cooldown of a hit is the duration of the hit animation, from full;
+    ;; not for a spawned enemy (EntityManager::handleSpawn does not do it)
+    if !st.set_by_file.cooldown_hit && (me.state != "spawn") {
         val hd = #anim.get(e.anims, "hit").sub
         set e.cooldown_hit = [cur = hd, dur = hd]
     }
