@@ -296,7 +296,29 @@ func power_effect (t, caster, id, pw) {
         if percent_f(pe.chance) {
             val dest = t
             if dest.hp > 0 {
-                effect.add(dest, pe.id, pe.duration, pe.magnitude)
+                var m = pe.magnitude
+                val def = effect.defs@(pe.id)
+                var ok = true
+                ;; a shield is charged with the max damage of the base type
+                ;; of the power, by its modifier (PowerManager::effect)
+                if def && (def.type == "shield") {
+                    val b = damage_index(pw.base_damage)
+                    if b == nil {
+                        set ok = false
+                    } else {
+                        val mx = stat(caster, DAMAGE@b.max)
+                        set m = match pw.mod_damage_mode {
+                            "multiply" => fl.f32(fl.f32(mx * pw.mod_damage_min) / 100)
+                            "add" => fl.f32(mx + pw.mod_damage_min)
+                            "absolute" => rand_between_f(pw.mod_damage_min, pw.mod_damage_max)
+                            else => mx
+                        }
+                        set m = resource_round(m)
+                    }
+                }
+                if ok {
+                    effect.add(dest, pe.id, pe.duration, m)
+                }
             }
         }
     }
@@ -380,7 +402,7 @@ func take_hit (t, hz, src) {
         return false
     }
     ;; StatBlock::takeDamage
-    set t.hp = fl.f32(t.hp - dmg)
+    set t.hp = fl.f32(t.hp - effect_shields(t, dmg))
     if t.hp <= 0 {
         set t.hp = 0.0
         ;; a critical death, if the entity has an animation for it

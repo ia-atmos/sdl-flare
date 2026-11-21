@@ -1,0 +1,62 @@
+;; NPCs: the `[npc]` sections of a map, as NPCManager::handleNewMap loads
+;; them, standing in their animation, drawn like the enemies.
+;;
+;;      npc.load(m)     the NPCs of a map, in order
+;;      npc.logic(ns)   a logic frame of each (NPC::logic)
+;;
+;; An NPC is [file, x, y, dir, cur]. Their dialogs, shops, and quests are
+;; not ported; their requirements of statuses are checked at the load.
+;; Their behavior draws nothing in the stored runs, and is not ported.
+
+pin npc = []
+
+func npc.load (m) {
+    val ns = []
+    loop _, s in m.secs {
+        if s.name == "npc" {
+            var file = nil
+            var x, y = 0.5, 0.5
+            var dir = 7         ;; the direction of NPC::NPC
+            var ok = true
+            loop _, kv in s.keys {
+                val k, v = kv@0, kv@1
+                match k {
+                    "filename" => { set file = v }
+                    "direction" => { set dir = parse.direction(v) }
+                    "location" => {
+                        pin l = parse.list(v)
+                        set x, y = parse.int(l@0) + 0.5, parse.int(l@1) + 0.5
+                    }
+                    "requires_status" => { if !campaign.status@v { set ok = false } }
+                    "requires_not_status" => { if campaign.status@v { set ok = false } }
+                }
+            }
+            if ok && file {
+                ;; the animations of its file (StatBlock::load)
+                var path = nil
+                loop _, sec in ini.load(file) || [] {
+                    loop _, kv in sec.keys {
+                        if kv@0 == "animations" {
+                            set path = kv@1
+                        }
+                    }
+                }
+                if path {
+                    val set_ = anim.load(path)
+                    set ns@+ = [file = file, x = fl.f32(x), y = fl.f32(y), dir = dir,
+                                cur = anim.cursor(anim.get(set_, "stance"))]
+                }
+            }
+        }
+    }
+    ns
+}
+
+;; NPC::logic: its animation advances, and it blocks its tile
+func npc.logic (ns) {
+    loop _, n in ns {
+        fl.col_unblock(n.x, n.y)
+        anim.advance(n.cur)
+        fl.col_block(n.x, n.y, false)
+    }
+}

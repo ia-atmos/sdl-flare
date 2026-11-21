@@ -186,6 +186,19 @@ func combat_src (hz, ens, hero) {
     nil
 }
 
+;; Entity::addRenders, the effects: each animation not completed, at
+;; the entity, in direction 0, above (prio `above`) or below it (prio 0)
+func play_draw_fx (e, above) {
+    loop _, v in e.fx_live || [] {
+        if !anim_completed(v.cur) {
+            val g = anim.gfx(v.cur.a, v.cur.sub, 0)
+            if g {
+                fl.ren(false, g@0, g@1, g@2, g@3, g@4, g@5, g@6, e.x, e.y, if v.above => above => 0, false)
+            }
+        }
+    }
+}
+
 ;; MapRenderer::checkEvents at the hero, from the frame of the hero
 func play_check_events (h) {
     if play.world {
@@ -250,6 +263,8 @@ task MapRun (path, pos, h) {
         fl.col_block(me.x, me.y, false)
     }
     play.new_map_draws(p@0, p@1, true)
+    ;; NPCManager::handleNewMap, after the enemies
+    pin npcs = npc.load(m)
     set combat.list = []
     set loot.ground = []
     set loot.map = []
@@ -274,6 +289,14 @@ task MapRun (path, pos, h) {
                 val g = anim.gfx(e.cur.a, e.cur.sub, e.dir)
                 if g && !gone && !fl.col_outside(e.x, e.y) {
                     fl.ren(e.corpse, g@0, g@1, g@2, g@3, g@4, g@5, g@6, e.x, e.y, 1, false)
+                    play_draw_fx(e, 2)
+                }
+            }
+            ;; NPCManager::addRenders
+            loop _, n in npcs {
+                val g = anim.gfx(n.cur.a, n.cur.sub, n.dir)
+                if g && !fl.col_outside(n.x, n.y) {
+                    fl.ren(false, g@0, g@1, g@2, g@3, g@4, g@5, g@6, n.x, n.y, 1, false)
                 }
             }
             ;; LootManager::addRenders: below the objects when landed
@@ -301,6 +324,10 @@ task MapRun (path, pos, h) {
         ;; MenuManager::logic: the equipment changed in the last frame
         if hp.equip_changed {
             hero_apply_equipment(hp)
+            ;; GameStatePlay::checkEquipmentChange: the layers again, and
+            ;; the hero in stance (Entity::loadAnimations)
+            hero_load_layers(hp)
+            hero_anim(hp, "stance")
             set hp.equip_changed = false
         }
         ;; GameStatePlay::checkLoot: currency picked up goes to the hero
@@ -329,6 +356,7 @@ task MapRun (path, pos, h) {
         }
         hazards_logic(ens, hp)
         loot.logic(hp)
+        npc.logic(npcs)
         ;; checkTeleport: another map ends this one
         if w.teleport {
             val tp = w.teleport
@@ -356,6 +384,7 @@ task MapRun (path, pos, h) {
 task Play (path, pos, class) {
     pin st = hero.stats(class)
     hero.load_sfx("male")
+    hero.load_layers()
     hero.load_steps(st.sfx_step)
 
     ;; GameStatePlay(): the hidden draw of its handleNewMap
@@ -375,9 +404,20 @@ task Play (path, pos, class) {
 
     loop on :draw {
         val hp = h.pub
-        val g = anim.gfx(hp.cur.a, hp.cur.sub, hp.dir)
-        if g && !os.getenv("FLARE_NOHERO") {
-            fl.ren(false, g@0, g@1, g@2, g@3, g@4, g@5, g@6, hp.x, hp.y, 0, true)
+        ;; Entity::addRenders of the hero: its layers in the order of its
+        ;; direction, each at the frame of the animation of the hero
+        if !os.getenv("FLARE_NOHERO") {
+            loop k, li in hero.layer_def@(hp.dir) {
+                val ls = hp.layer_sets@li
+                if ls {
+                    val a = anim.get(ls, hp.cur.a.name)
+                    val g = anim.gfx(a, hp.cur.sub, hp.dir)
+                    if g {
+                        fl.ren(false, g@0, g@1, g@2, g@3, g@4, g@5, g@6, hp.x, hp.y, k + 1, true)
+                    }
+                }
+            }
+            play_draw_fx(hp, #hero.layer_def@(hp.dir) + 1)
         }
         fl.map_render()
         fl.ren_clear()          ;; the maps add theirs before the next draw

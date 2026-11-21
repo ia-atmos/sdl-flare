@@ -1,0 +1,9 @@
+# env: FLARE_MAP=maps/cave1.txt FLARE_POS=78.5,35.5 FLARE_FRAMES=420 FLARE_RNG=1
+# wait for the shield of the goblin shaman, walk to it, and hit it: the shield takes the damage
+80 key W
+90 key A
+140 keyup W
+140 keyup A
+142 move 927 386
+142 down 1
+410 up 1

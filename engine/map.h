@@ -403,12 +403,43 @@ static int fl_ren_cmp (const void* a, const void* b) {
 
 static int     FL_HB_X, FL_HB_Y, FL_HB_W, FL_HB_H;     // hero_bounds
 
+// Utils::isWithinRect
 static int fl_within (int rx, int ry, int rw, int rh, int px, int py) {
-    return px >= rx && py >= ry && px <= rx + rw && py <= ry + rh;
+    return px >= rx && py >= ry && px < rx + rw && py < ry + rh;
 }
 
-static void fl_draw_tile (FlTile* t, int dx, int dy) {
-    fl_img_draw(t->img, t->x, t->y, t->w, t->h, dx, dy, 255, 0xFFFFFF, 0);
+static int FL_DRAWN_HERO;       // MapRenderer::drawn_hero, in this render
+
+static void fl_tile_bounds (int x, int y, unsigned short* layer, int* bx, int* by, int* bw, int* bh,
+                            FlIPt* center);
+
+// MapRenderer::checkTileOverlappingHero and fadeOverlapTile (fade_walls on,
+// fade_wall_alpha of 63): the alpha of tile (x,y) of a layer
+static int fl_tile_alpha (int x, int y, unsigned short* layer) {
+    if (!FL_DRAWN_HERO) return 255;
+    int bx=0, by=0, bw=0, bh=0;
+    FlIPt c = {0,0};
+    fl_tile_bounds(x, y, layer, &bx, &by, &bw, &bh, &c);
+    int hx = FL_HB_X, hy = FL_HB_Y, hw = FL_HB_W, hh = FL_HB_H;
+    int over =
+        fl_within(bx, by, bw, bh, hx, hy) || fl_within(bx, by, bw, bh, hx + hw, hy) ||
+        fl_within(bx, by, bw, bh, hx, hy + hh) || fl_within(bx, by, bw, bh, hx + hw, hy + hh) ||
+        fl_within(hx, hy, hw, hh, bx, by) || fl_within(hx, hy, hw, hh, bx + bw, by) ||
+        fl_within(hx, hy, hw, hh, bx, by + bh) || fl_within(hx, hy, hw, hh, bx + bw, by + bh) ||
+        fl_within(bx, by, bw, bh, hx + hw/2, hy + hh/2) ||
+        fl_within(hx, hy, hw, hh, bx + bw/2, by + bh/2);
+    if (!over) return 255;
+    float ax = (float)(hx + hw / 2), ay = (float)(hy + hh / 2);
+    float tx = (float)(bx + bw / 2), ty = (float)(by + bh / 2);
+    float dist = sqrtf((ax - tx) * (ax - tx) + (ay - ty) * (ay - ty)) / (float)bh;
+    int a = (int)(255.f * dist);
+    if (a < 63) a = 63;
+    if (a > 255) a = 255;
+    return a;
+}
+
+static void fl_draw_tile (FlTile* t, int dx, int dy, int x, int y, unsigned short* layer) {
+    fl_img_draw(t->img, t->x, t->y, t->w, t->h, dx, dy, fl_tile_alpha(x, y, layer), 0xFFFFFF, 0);
 }
 
 static void fl_draw_ren (FlRen* r) {
@@ -418,6 +449,7 @@ static void fl_draw_ren (FlRen* r) {
     FlIPt p = fl_map2scr(r->mx, r->my, FL_SHAKE.x, FL_SHAKE.y);
     fl_img_draw(r->img, r->sx, r->sy, r->sw, r->sh, p.x - r->ox, p.y - r->oy,
                 r->alpha, r->color, r->blend);
+    if (r->hero) FL_DRAWN_HERO = 1;
 }
 
 // centerTile, isometric
@@ -472,7 +504,7 @@ static void fl_render_layer (unsigned short* layer) {
             p.x += FL_TILE_W;
             FlTile* t = fl_tile(layer[i * h + j]);
             if (t != NULL) {
-                fl_draw_tile(t, p.x - t->ox, p.y - t->oy);
+                fl_draw_tile(t, p.x - t->ox, p.y - t->oy, i, j, layer);
             }
         }
         j = j + tiles_width;
@@ -538,7 +570,7 @@ static void fl_render_front (FlRen* r, int n) {
             if (draw_tile && !FL_DRAWN[i * h + j]) {
                 FlTile* t = fl_tile(layer[i * h + j]);
                 if (t != NULL) {
-                    fl_draw_tile(t, p.x - t->ox, p.y - t->oy);
+                    fl_draw_tile(t, p.x - t->ox, p.y - t->oy, i, j, layer);
                     FL_DRAWN[i * h + j] = 1;
                 }
             }
@@ -590,7 +622,7 @@ static void fl_render_front (FlRen* r, int n) {
             if (draw_sw_tile && i-2 >= 0 && j+2 < h && !FL_DRAWN[(i-2) * h + (j+2)]) {
                 FlTile* t = fl_tile(layer[(i-2) * h + (j+2)]);
                 if (t != NULL) {
-                    fl_draw_tile(t, sw_c.x - t->ox, sw_c.y - t->oy);
+                    fl_draw_tile(t, sw_c.x - t->ox, sw_c.y - t->oy, i-2, j+2, layer);
                     FL_DRAWN[(i-2) * h + (j+2)] = 1;
                 }
             }
@@ -600,7 +632,7 @@ static void fl_render_front (FlRen* r, int n) {
             if (!draw_tile && i < w && j < h && !FL_DRAWN[i * h + j]) {
                 FlTile* t = fl_tile(layer[i * h + j]);
                 if (t != NULL) {
-                    fl_draw_tile(t, ne_c.x - t->ox, ne_c.y - t->oy);
+                    fl_draw_tile(t, ne_c.x - t->ox, ne_c.y - t->oy, i, j, layer);
                     FL_DRAWN[i * h + j] = 1;
                 }
             }
@@ -640,6 +672,7 @@ static void fl_map_render (void) {
         return;
     }
     // hero_bounds
+    FL_DRAWN_HERO = 0;
     FL_HB_X = FL_HB_Y = FL_HB_W = FL_HB_H = 0;
     FlRen* r = FL_RENS[0];
     for (int i=0; i<FL_RENS_N[0]; i++) {

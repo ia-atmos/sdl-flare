@@ -157,6 +157,20 @@ backtraces at each call.
   converted to ARGB8888 (`SDLSoftwareRenderDevice::loadImage`). SDL blends
   the semi-transparent pixels of the two differently (by 1 to 9 levels):
   the port keeps the two formats to draw the same pixels.
+- An enemy spawned by a power or an event (`EntityManager::handleSpawn`)
+  does not get the cooldown of hits from its hit animation, unlike the
+  enemies of the map (`loadEntity`): it can be hit into the hit state at
+  once.
+- An NPC faces direction 7 (`NPC::NPC`), unless its section of the map
+  says otherwise.
+- A tile drawn after the hero that overlaps the hero is faded
+  (`fade_walls`, on by default; `fade_wall_alpha` 63), with an alpha by
+  its distance to the center of the hero.
+- `Utils::isWithinRect` excludes the right and bottom edges.
+- An item picked up goes at once into an empty slot of its type when the
+  hero meets its requirements; the stats change in the next frame
+  (`MenuManager::logic` before `checkLoot`), and the layers of the hero
+  with it, which puts the hero in stance.
 
 ## Differences
 

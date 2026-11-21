@@ -25,6 +25,8 @@ func effect.init () {
                 }
                 "type" => { if d { set d.type = kv@1 } }
                 "can_stack" => { if d { set d.can_stack = parse.bool(kv@1) } }
+                "animation" => { if d { set d.animation = kv@1 } }
+                "render_above" => { if d { set d.render_above = parse.bool(kv@1) } }
             }
         }
     }
@@ -51,7 +53,8 @@ func effect.add (t, id, d, m) {
     if r && percent_f(stat(t, r)) {
         return false
     }
-    set t.fx_add@+ = [id = id, type = def.type, dur = d, m = m, can_stack = def.can_stack]
+    set t.fx_add@+ = [id = id, type = def.type, dur = d, m = m, can_stack = def.can_stack,
+                      animation = def.animation, above = def.render_above || false]
     true
 }
 
@@ -62,6 +65,43 @@ func effect.remove (t, type) {
 
 ;; An effect: alive while its timer runs (forever with no duration).
 task Effect (e, fx) {
+    ;; its animation, while the effect lives: advanced in each logic of the
+    ;; effects until it completes, and drawn with the entity (Entity::addRenders)
+    set e.fx_live = e.fx_live || []
+    val v = if fx.animation => vector.insert(e.fx_live,
+        [cur = anim.cursor(anim.get(anim.load(fx.animation), "")), above = fx.above]) => nil
+    defer {
+        var k = nil
+        loop i, x in e.fx_live {
+            if x == v {
+                set k = i
+            }
+        }
+        if k != nil {
+            vector.remove(e.fx_live, k)
+        }
+    }
+    ;; a shield: its charge, until it is spent
+    set e.shields = e.shields || []
+    val sh = if fx.type == "shield" => vector.insert(e.shields, [m = fx.m, max = fx.m]) => nil
+    defer {
+        var k = nil
+        loop i, x in e.shields {
+            if x == sh {
+                set k = i
+            }
+        }
+        if k != nil {
+            vector.remove(e.shields, k)
+        }
+    }
+    spawn {
+        loop on :fx.logic {
+            if v && !anim_completed(v.cur) {
+                anim.advance(v.cur)
+            }
+        }
+    }
     ;; the status, with the timer at `cur`: damage over time on each whole
     ;; second of the timer (or at its begin, if shorter than a second)
     val func status (cur) {
@@ -76,6 +116,8 @@ task Effect (e, fx) {
         if fx.dur == 0 {
             loop on :fx.logic {
                 status(0)
+                ;; a shield spent ends (EffectManager::logic)
+                until sh && (sh.max > 0) && (sh.m == 0)
             }
         } else {
             ;; ticked in each logic after the one that sets the status
@@ -86,6 +128,28 @@ task Effect (e, fx) {
             await :fx.logic
         }
     }
+}
+
+;; EffectManager::damageShields: the damage that the shields do not take
+func effect_shields (e, dmg) {
+    var over = dmg
+    loop _, s in e.shields || [] {
+        if s.max > 0 {
+            set s.m = fl.f32(s.m - over)
+            if s.m < 0 {
+                set over = math.abs(s.m)
+                set s.m = 0.0
+            } else {
+                return 0.0
+            }
+        }
+    }
+    over
+}
+
+;; Animation::isCompleted
+func anim_completed (c) {
+    (c.a.type == "play_once") && (c.times > 0)
 }
 
 ;; EffectManager::logic of an entity, with its pool of effects
@@ -121,7 +185,7 @@ func effect.damage (e) {
 
 ;; StatBlock::takeDamage of an effect
 func effect_take (e, d) {
-    set e.hp = fl.f32(e.hp - d)
+    set e.hp = fl.f32(e.hp - effect_shields(e, d))
     if e.hp <= 0 {
         set e.hp = 0.0
         set e.state = STATE.DEAD

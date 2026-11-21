@@ -19,6 +19,7 @@ include "src/enemy.atm"
 include "src/ai.atm"
 include "src/combat.atm"
 include "src/event.atm"
+include "src/npc.atm"
 include "src/play.atm"
 
 val dir = os.getenv("FLARE_DATA")
