@@ -12,7 +12,7 @@ Last review: 2026-11-18, through the whole conversation.
 | # | Title | State |
 |---|-------|-------|
 | #1 | The remotes of the checkouts of the compiler and of this repository | open, waits for the author |
-| #2 | The friction of `pin` with module tables (atmos-lang#40) | partly settled by the rules; experiment in #16 |
+| #2 | The friction of `pin` with module tables (atmos-lang#40) | settled by set :out (#16) |
 | #3 | When to relax exactness for expressiveness | open, waits for the author |
 | #4 | Going back on the first migration after the relaxed rules of pin | closed: done in the second migration (#15) |
 | #5 | Moved from F5 to F6: game over menu, combat text, transform and block powers | open, work |
@@ -26,7 +26,7 @@ Last review: 2026-11-18, through the whole conversation.
 | #13 | Scope of F5 by the data of the alpha demo | reported, not acknowledged |
 | #14 | Options added to the patch of the original | reported, not acknowledged |
 | #15 | The two migrations to the rules of pin | reported, not acknowledged |
-| #16 | The experiment of a per-map context (branch `exp-map-context`) | open, waits for the author |
+| #16 | The experiment of a per-map context (branch `exp-map-context`) | settled by the session (#16c with set :out), to be confirmed |
 | #17 | Event powers (traps) are queued and never activated | closed: done |
 | #18 | Other reports: `until` of the compiler, the corrupted golden, the permission to install | reported, not acknowledged |
 
@@ -56,7 +56,11 @@ defect.
   (`doc/state.md`), and the hidden draws of the original.
 - #3b relax now, piece by piece.
 
-#16 **The experiment of a per-map context** (asked by the author through
+#16 (Settled by the session on 2026-11-21, to be confirmed: `set :out`
+is on `main`, after atmos-pin#16b was approved (ia-atmos/lang a80a77f):
+the five places refer to the entity itself, the ids and copies are gone,
+the 32 runs are identical. Reversible: the branch `exp-map-context`
+stays as the alternative.) **The experiment of a per-map context** (asked by the author through
 atmos-pin): everything that lives for one map in one table pinned by
 `MapRun`. On the branch `exp-map-context` (dc92020), tests identical,
 -32 lines; four of the five ids and copies of #2 disappear; the hero,
