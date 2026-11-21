@@ -1,0 +1,370 @@
+0 map maps/cave1.txt
+0 event 4 68 25 1 1 1
+0 event 4 84 52 1 1 1
+0 event 4 45 28 1 1 1
+0 event 4 56 41 1 1 1
+0 event 4 33 24 1 1 1
+0 event 4 5 4 1 1 1
+0 event 4 0 0 1 1 1
+0 spawn 0 Bench 0 78.5 35.5 90
+0 spawn 1 Antlion Hatchling 0 36.5 5.5 40
+0 spawn 2 Antlion Hatchling 0 57.5 12.5 40
+0 spawn 3 Antlion Hatchling 0 33.5 10.5 40
+0 spawn 4 Antlion Slasher 0 37.5 10.5 105
+0 spawn 5 Antlion Hatchling 0 42.5 7.5 40
+0 spawn 6 Antlion Slasher 0 45.5 9.5 105
+0 spawn 7 Antlion Spitter 0 46.5 17.5 140
+0 spawn 8 Antlion Hatchling 0 47.5 19.5 40
+0 spawn 9 Antlion Slasher 0 49.5 18.5 105
+0 spawn 10 Antlion Hatchling 0 52.5 16.5 40
+0 spawn 11 Antlion Spitter 0 53.5 18.5 140
+0 spawn 12 Antlion Slasher 0 54.5 17.5 105
+0 spawn 13 Antlion Spitter 0 48.5 26.5 140
+0 spawn 14 Antlion Hatchling 0 47.5 30.5 40
+0 spawn 15 Antlion Slasher 0 49.5 33.5 105
+0 spawn 16 Antlion Hatchling 0 47.5 34.5 40
+0 spawn 17 Antlion Hatchling 0 46.5 30.5 40
+0 spawn 18 Antlion Hatchling 0 49.5 27.5 40
+0 spawn 19 Antlion Hatchling 0 55.5 33.5 40
+0 spawn 20 Goblin Charger 0 67.5 27.5 50
+0 spawn 21 Goblin Spearman 0 74.5 29.5 60
+0 spawn 22 Goblin Charger 0 75.5 32.5 50
+0 spawn 23 Goblin Shaman 0 73.5 33.5 105
+0 spawn 24 Goblin Spearman 0 73.5 32.5 60
+0 spawn 25 Skeletal Archer 0 16.5 29.5 75
+0 spawn 26 Skeletal Mage 0 18.5 30.5 90
+0 spawn 27 Skeletal Warrior 0 23.5 29.5 130
+0 spawn 28 Minotaur 0 23.5 33.5 180
+0 spawn 29 Skeletal Warrior 0 10.5 30.5 130
+0 spawn 30 Skeletal Archer 0 17.5 50.5 75
+0 spawn 31 Skeletal Archer 0 16.5 49.5 75
+0 spawn 32 Minotaur 0 24.5 52.5 180
+0 spawn 33 Skeletal Mage 0 13.5 45.5 90
+0 spawn 34 Antlion Blinker 0 39.5 39.5 90
+0 spawn 35 Antlion Burster 0 43.5 43.5 130
+0 spawn 36 Antlion Blinker 0 45.5 48.5 90
+0 spawn 37 Antlion Spitter 0 74.5 53.5 140
+0 spawn 38 Antlion Slasher 0 70.5 56.5 105
+0 spawn 39 Antlion Blinker 0 85.5 68.5 90
+0 spawn 40 Antlion Spitter 0 63.5 64.5 140
+0 spawn 41 Antlion Spitter 0 63.5 66.5 140
+0 spawn 42 Antlion Slasher 0 68.5 68.5 105
+0 spawn 43 Antlion Blinker 0 67.5 71.5 90
+0 spawn 44 Antlion Burster 0 60.5 72.5 130
+0 spawn 45 Antlion Blinker 0 52.5 69.5 90
+0 spawn 46 Antlion Hatchling 0 58.5 76.5 40
+0 spawn 47 Antlion Hatchling 0 59.5 76.5 40
+0 spawn 48 Antlion Hatchling 0 60.5 76.5 40
+0 spawn 49 Antlion Hatchling 0 61.5 76.5 40
+0 spawn 50 Antlion Hatchling 0 62.5 75.5 40
+0 spawn 51 Antlion Burster 0 38.5 63.5 130
+0 spawn 52 Antlion Burster 0 36.5 65.5 130
+0 spawn 53 Antlion Burster 0 42.5 66.5 130
+0 spawn 54 Antlion Blinker 0 38.5 70.5 90
+0 spawn 55 Antlion Burster 0 42.5 73.5 130
+0 spawn 56 Antlion Spitter 0 37.5 77.5 140
+0 spawn 57 Antlion Blinker 0 39.5 79.5 90
+0 spawn 58 Antlion Spitter 0 42.5 79.5 140
+0 spawn 59 Antlion Slasher 0 46.5 80.5 105
+0 spawn 60 Antlion Slasher 0 32.5 76.5 105
+0 spawn 61 Antlion Slasher 0 35.5 79.5 105
+0 spawn 62 Antlion Slasher 0 37.5 83.5 105
+0 spawn 63 Antlion Burster 0 44.5 86.5 130
+0 spawn 64 Antlion Hatchling 0 36.5 72.5 40
+0 spawn 65 Antlion Hatchling 0 37.5 71.5 40
+0 spawn 66 Antlion Hatchling 0 39.5 71.5 40
+0 spawn 67 Antlion Hatchling 0 44.5 74.5 40
+0 spawn 68 Antlion Hatchling 0 43.5 75.5 40
+0 spawn 69 Antlion Hatchling 0 46.5 77.5 40
+0 rng 418
+1 power 21 132 74.5 29.5
+1 power 22 132 75.5 32.5
+1 power 23 132 73.5 33.5
+1 power 24 132 73.5 32.5
+1 rng 29
+2 rng 13
+3 state 24 1 73.5235672 32.523571
+3 rng 7
+4 rng 4
+5 rng 4
+6 rng 4
+7 rng 4
+8 rng 4
+9 rng 4
+10 rng 4
+11 rng 4
+12 rng 4
+13 rng 4
+14 state 21 1 74.5235672 29.523571
+14 rng 4
+15 rng 3
+16 rng 3
+17 state 22 1 75.5589218 32.5589256
+17 rng 3
+18 rng 2
+19 rng 2
+20 rng 2
+21 rng 2
+22 rng 2
+23 rng 2
+24 rng 2
+25 rng 2
+26 rng 2
+27 rng 4
+28 rng 2
+29 rng 2
+30 rng 2
+31 rng 2
+32 rng 2
+33 rng 2
+34 rng 2
+35 rng 2
+36 rng 2
+37 rng 2
+38 rng 2
+39 rng 3
+40 rng 2
+41 rng 2
+42 rng 2
+43 rng 2
+44 rng 2
+45 rng 2
+46 rng 2
+47 state 23 1 73.5235672 33.523571
+47 rng 2
+48 rng 1
+49 rng 1
+50 rng 5
+51 rng 8
+52 rng 5
+53 rng 5
+54 state 22 0 77.6801071 34.6802483
+54 rng 7
+55 state 22 2 77.6801071 34.6802483
+55 rng 9
+56 rng 5
+57 state 23 2 73.735672 33.7357101
+57 rng 7
+58 rng 3
+59 rng 3
+60 rng 3
+61 rng 3
+62 rng 3
+63 rng 4
+64 rng 3
+65 state 24 2 74.9611664 33.9614029
+65 rng 5
+66 power 22 1 78.5 35.5
+66 rng 5
+67 rng 2
+68 rng 2
+69 state 21 2 75.796196 30.7964058
+69 rng 4
+70 rng 1
+71 rng 1
+72 power 23 11 78.5 35.5
+72 state 22 0 77.6801071 34.6802483
+72 rng 2
+73 rng 1
+74 rng 1
+75 rng 4
+76 power 24 32 78.5 35.5
+76 rng 2
+77 rng 1
+78 rng 1
+79 rng 1
+80 power 21 32 78.5 35.5
+80 rng 2
+81 rng 1
+82 rng 1
+83 rng 1
+84 rng 1
+85 rng 1
+86 rng 1
+87 rng 2
+88 state 23 0 73.735672 33.7357101
+88 state 24 0 74.9611664 33.9614029
+88 rng 1
+89 rng 4
+90 state 23 1 73.7592392 33.7592812
+90 state 24 1 74.9847336 33.9849739
+90 rng 8
+91 rng 1
+92 state 21 0 75.796196 30.7964058
+92 rng 1
+93 rng 2
+94 rng 2
+95 rng 2
+96 rng 2
+97 rng 2
+98 rng 2
+99 rng 5
+100 state 21 1 75.8197632 30.8199768
+100 rng 2
+101 rng 1
+102 rng 5
+103 rng 1
+104 rng 1
+105 rng 1
+106 rng 1
+107 rng 1
+108 rng 1
+109 rng 1
+110 rng 1
+111 rng 2
+112 rng 3
+113 rng 3
+114 rng 3
+115 rng 3
+116 rng 3
+117 rng 3
+118 rng 3
+119 rng 3
+120 rng 3
+121 rng 3
+122 rng 3
+123 rng 5
+124 rng 3
+125 rng 3
+126 rng 3
+127 rng 3
+128 rng 3
+129 rng 5
+130 state 22 2 77.6801071 34.6802483
+130 rng 6
+131 rng 1
+132 rng 1
+133 rng 1
+134 rng 1
+135 rng 2
+136 rng 1
+137 rng 1
+138 rng 4
+139 rng 4
+140 rng 4
+141 power 22 1 78.5 35.5
+141 state 0 5 78.5 35.5
+141 hit 0 76
+141 state 23 2 75.1719742 34.3721275
+141 rng 11
+142 rng 3
+143 rng 3
+144 rng 3
+145 rng 3
+146 rng 3
+147 state 22 0 77.6801071 34.6802483
+147 rng 5
+148 rng 3
+149 rng 3
+150 state 0 0 78.5 35.5
+150 rng 3
+151 rng 3
+152 state 21 2 77.0184784 32.0185623
+152 rng 5
+153 rng 2
+154 rng 3
+155 rng 2
+156 power 23 6 78.5 35.5
+156 state 24 2 76.7509766 34.9513855
+156 rng 4
+157 rng 1
+158 rng 1
+159 rng 2
+160 rng 1
+161 rng 1
+162 rng 1
+163 power 21 32 78.5 35.5
+163 rng 2
+164 rng 1
+165 power 23 126 78.5 35.5
+165 state 0 5 78.5 35.5
+165 hit 0 49.4667358
+165 rng 9
+166 rng 1
+167 power 24 32 78.5 35.5
+167 rng 2
+168 rng 1
+169 rng 1
+170 rng 1
+171 rng 6
+172 state 23 0 75.1719742 34.3721275
+172 rng 1
+173 rng 3
+174 state 0 0 78.5 35.5
+174 rng 3
+175 state 21 0 77.0184784 32.0185623
+175 rng 3
+176 state 0 5 78.5 35.5
+176 hit 0 15.6806145
+176 rng 11
+177 rng 5
+178 state 23 1 75.1955414 34.3956985
+178 rng 6
+179 state 24 0 76.7509766 34.9513855
+179 rng 3
+180 rng 5
+181 rng 5
+182 rng 5
+183 state 24 1 76.7843094 34.9513855
+183 rng 6
+184 state 21 1 77.0420456 32.0421333
+184 rng 3
+185 state 0 0 78.5 35.5
+185 rng 1
+186 rng 1
+187 rng 3
+188 rng 3
+189 rng 3
+190 rng 3
+191 rng 3
+192 rng 3
+193 rng 3
+194 rng 3
+195 rng 4
+196 rng 3
+197 rng 3
+198 rng 3
+199 rng 3
+200 rng 3
+201 rng 3
+202 rng 4
+203 rng 3
+204 rng 3
+205 state 24 0 77.425415 35.0099983
+205 rng 3
+206 rng 3
+207 rng 4
+208 rng 3
+209 rng 3
+210 rng 3
+211 rng 3
+212 rng 3
+213 rng 3
+214 rng 3
+215 rng 3
+216 rng 3
+217 rng 3
+218 rng 3
+219 state 23 0 76.1382294 35.3385391
+219 rng 4
+220 rng 3
+221 rng 3
+222 rng 4
+223 rng 4
+224 rng 4
+225 rng 5
+226 rng 5
+227 rng 5
+228 rng 5
+229 rng 6
+230 rng 6
+231 rng 7
+232 rng 6
+233 state 22 2 77.6801071 34.6802483
+233 rng 8
+234 rng 4
+235 rng 4
+236 rng 4
+237 rng 4
+238 rng 4
+239 rng 4
