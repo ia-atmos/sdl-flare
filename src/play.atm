@@ -298,6 +298,11 @@ task MapRun (path, pos, h) {
     }
 
     loop on :frame {
+        ;; MenuManager::logic: the equipment changed in the last frame
+        if hp.equip_changed {
+            hero_apply_equipment(hp)
+            set hp.equip_changed = false
+        }
         ;; GameStatePlay::checkLoot: currency picked up goes to the hero
         if hp.hp > 0 {
             var id, q = loot.autopickup(hp)
@@ -306,14 +311,7 @@ task MapRun (path, pos, h) {
             }
             if id != nil {
                 fl.trace(string.format("pickup %d %d", id, q))
-                ;; MenuInventory::add, for now: the currency, and the other
-                ;; stacks in the order they come (no slots, no auto-equip)
-                if id == loot.currency {
-                    set hp.currency = (hp.currency || 0) + q
-                } else {
-                    set hp.items = hp.items || []
-                    set hp.items@+ = [id = id, q = q]
-                }
+                hero.pickup(hp, id, q)
             }
         }
         if hp.hp > 0 {

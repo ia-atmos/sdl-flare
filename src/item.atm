@@ -3,10 +3,12 @@
 ;;      item.init()         loads the items
 ;;      item.get(id)        an item, or nil
 ;;
-;; An item has the fields that the port uses so far: its id, and its loot
-;; animations, [name, low, high] by quantity (`loot_animation`). An item
-;; read again (in a later mod) clears its list at its first
-;; `loot_animation`, as the original.
+;; An item has the fields that the port uses so far: its id, its type (the
+;; slot it goes to), the primary stats it requires, its damage by type
+;; ([type, min, max]), its absorption ([min, max]), its bonuses ([stat,
+;; value]), and its loot animations, [name, low, high] by quantity. An
+;; item read again (in a later mod) clears its lists of loot animations,
+;; requirements, and bonuses at their first key, as the original.
 
 pin item = [
     all = [],       ;; id -> item
@@ -15,6 +17,8 @@ pin item = [
 func item.init () {
     var it = nil
     var clear_anim = false
+    var clear_req = false
+    var clear_bonus = false
     loop _, s in ini.load("items/items.txt") || [] {
         loop _, kv in s.keys {
             val k, v = kv@0, kv@1
@@ -23,12 +27,42 @@ func item.init () {
                     val id = parse.int(v)
                     if item.all@id {
                         set clear_anim = true
+                        set clear_req = true
+                        set clear_bonus = true
                     } else {
-                        set item.all@id = [id = id, loot_animation = []]
+                        set item.all@id = [id = id, type = "", requires = [], dmg = [],
+                                           abs = [0.0, 0.0], bonus = [], loot_animation = []]
                     }
                     set it = item.all@id
                 }
                 it == nil => nil
+                k == "item_type" => { set it.type = v }
+                k == "dmg" => {
+                    pin l = parse.list(v)
+                    val lo = parse.float(l@1)
+                    set it.dmg@+ = [type = l@0, min = lo, max = if (l@2 != nil) && (l@2 != "") => parse.float(l@2) => lo]
+                }
+                k == "abs" => {
+                    pin l = parse.list(v)
+                    val lo = parse.float(l@0)
+                    set it.abs = [lo, if (l@1 != nil) && (l@1 != "") => parse.float(l@1) => lo]
+                }
+                k == "requires_stat" => {
+                    if clear_req {
+                        set it.requires = []
+                        set clear_req = false
+                    }
+                    pin l = parse.list(v)
+                    set it.requires@(l@0) = parse.int(l@1)
+                }
+                k == "bonus" => {
+                    if clear_bonus {
+                        set it.bonus = []
+                        set clear_bonus = false
+                    }
+                    pin l = parse.list(v)
+                    set it.bonus@+ = [stat = l@0, value = parse.float(l@1)]
+                }
                 k == "loot_animation" => {
                     if clear_anim {
                         set it.loot_animation = []

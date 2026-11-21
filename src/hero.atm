@@ -24,6 +24,8 @@ pin hero = [
                         ;; the sounds of the avatar (engine/avatar/<base>.txt)
     actionbar = [],     ;; the powers of the slots of the class
     equipment = [],     ;; the items of the class
+    currency = 0,       ;; the currency of the class
+    slots = [],         ;; the types of the equipment slots (menus/inventory.txt)
 ]
 
 ;; the sounds of the avatar, as StatBlock::loadHeroSFX
@@ -60,6 +62,9 @@ func hero.stats (class) {
                 if kv@0 == "primary" {
                     pin l = parse.list(kv@1)
                     set primary@(l@0) = primary@(l@0) + parse.int(l@1)
+                }
+                if kv@0 == "currency" {
+                    set hero.currency = parse.int(kv@1)
                 }
                 if kv@0 == "equipment" {
                     set hero.equipment = []
@@ -100,28 +105,95 @@ func hero.stats (class) {
             }
         }
     }
-    ;; the damage of the items equipped (dmg=type,min,max of items/items.txt)
-    loop _, s in ini.load("items/items.txt") || [] {
-        var id = nil
-        loop _, kv in s.keys {
-            ifs {
-                kv@0 == "id" => {
-                    set id = parse.int(kv@1)
-                }
-                (kv@0 == "dmg") && X.xin(id, hero.equipment) => {
-                    pin l = parse.list(kv@1)
-                    val kmin = "dmg_" ++ l@0 ++ "_min"
-                    val kmax = "dmg_" ++ l@0 ++ "_max"
-                    set base@kmin = (base@kmin || 0) + parse.float(l@1)
-                    set base@kmax = (base@kmax || 0) + parse.float(l@2)
-                }
+    ;; the slots of the equipment, in order
+    set hero.slots = []
+    loop _, sec in ini.load("menus/inventory.txt") || [] {
+        loop _, kv in sec.keys {
+            if kv@0 == "equipment_slot" {
+                set hero.slots@+ = parse.list(kv@1)@2
             }
         }
     }
+    set st.primary = X.copy(primary)
+    ;; the stats of the class, before the items (see hero_apply_equipment)
+    set st.class_base = X.copy(base)
     set st.hp = base.hp || 0
     set st.mp = base.mp || 0
     set st.base = base
     st
+}
+
+;; ItemManager::requirementsMet, for the primary stats (no item gives
+;; primary stats in the alpha demo)
+func hero_meets (h, it) {
+    var ok = true
+    loop k, v in it.requires {
+        if (h.primary@k || 0) < v {
+            set ok = false
+        }
+    }
+    ok
+}
+
+;; MenuInventory::getEquipSlotFromItem, with only empty slots: the first
+;; slot of the type of the item, or -1
+func hero_equip_slot (h, id) {
+    val it = item.get(id)
+    var slot = -1
+    if it && hero_meets(h, it) {
+        loop i, t in hero.slots {
+            if (slot == -1) && (t == it.type) && (h.equip@i == nil) {
+                set slot = i
+            }
+        }
+    }
+    slot
+}
+
+;; MenuInventory::applyEquipment (applyItemStats): the stats of the class,
+;; plus the damage, the absorption, and the bonuses of the items equipped
+func hero_apply_equipment (h) {
+    loop k, v in h.class_base {
+        set h.base@k = v
+    }
+    loop k, _ in h.base {
+        if h.class_base@k == nil {
+            set h.base@k = nil
+        }
+    }
+    loop i in #hero.slots {
+        val e = h.equip@i
+        val it = e && item.get(e.id)
+        if it {
+            loop _, d in it.dmg {
+                val kmin, kmax = "dmg_" ++ d.type ++ "_min", "dmg_" ++ d.type ++ "_max"
+                set h.base@kmin = (h.base@kmin || 0) + d.min
+                set h.base@kmax = (h.base@kmax || 0) + d.max
+            }
+            set h.base.absorb_min = (h.base.absorb_min || 0) + it.abs@0
+            set h.base.absorb_max = (h.base.absorb_max || 0) + it.abs@1
+            loop _, b in it.bonus {
+                set h.base@(b.stat) = (h.base@(b.stat) || 0) + b.value
+            }
+        }
+    }
+}
+
+;; MenuInventory::add, from a pickup: currency to the currency; an item
+;; into an empty slot of its type, if the hero meets its requirements
+;; (auto_equip), applied in the next frame; else to the items carried
+func hero.pickup (h, id, q) {
+    if id == loot.currency {
+        set h.currency = h.currency + q
+    } else {
+        val slot = hero_equip_slot(h, id)
+        if slot >= 0 {
+            set h.equip@slot = [id = id, q = q]
+            set h.equip_changed = true
+        } else {
+            set h.items@+ = [id = id, q = q]
+        }
+    }
 }
 
 ;; the sounds of the steps of an id (Avatar::loadStepFX)
@@ -325,6 +397,8 @@ task HDead (h, turning) {
 task Hero (st, pos) {
     set pub = [
         task = task, name = "Bench", id = 0, hero = true, base = st.base,
+        class_base = st.class_base, primary = st.primary,
+        equip = [], items = [], currency = hero.currency, equip_changed = false,
         melee_range = 1.0, in_combat = false, next = nil, cursor_enemy = nil,
         actions = [], casting = [], hp_max = st.hp, dot = 0.0, dot_percent = 0.0, stun = false, fx_add = [], fx_remove = [],
         ;; the global cooldown between powers: 66ms in StatBlock::loadHeroStats
@@ -336,6 +410,15 @@ task Hero (st, pos) {
         anims = anim.load("animations/hero.txt"),
     ]
     val h = pub
+    ;; SaveLoad::loadClass: the equipment of the class, each in the first
+    ;; empty slot of its type, then applied
+    loop _, id in hero.equipment {
+        val slot = hero_equip_slot(h, id)
+        if slot >= 0 {
+            set h.equip@slot = [id = id, q = 1]
+        }
+    }
+    hero_apply_equipment(h)
     set h.cur = anim.cursor(anim.get(h.anims, "stance"))
     ;; Entity::loadAnimations: the cooldown of a hit is the duration of
     ;; the hit animation, from full (Timer::setDuration)
