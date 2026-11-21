@@ -348,6 +348,10 @@ func take_hit (t, hz, src) {
     ;; absorption
     var absorb = rand_between_f(stat(t, "absorb_min"), stat(t, "absorb_max"))
     if (absorb > 0) && (dmg > 0) {
+        ;; within min_absorb and max_absorb (0 and 100: engine/combat.txt)
+        if fl.f32(fl.f32(absorb * 100) / dmg) > 100 {
+            set absorb = fl.f32(fl.f32(dmg * 100) / 100)
+        }
         if absorb == 0 {
             set absorb = 1
         }
