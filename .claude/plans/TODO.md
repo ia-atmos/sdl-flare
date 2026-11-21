@@ -11,9 +11,9 @@ Last review: 2026-11-18, through the whole conversation.
 
 | # | Title | State |
 |---|-------|-------|
-| #1 | The remotes of the checkouts of the compiler and of this repository | open, waits for the author |
+| #1 | The remotes of the checkouts of the compiler and of this repository | closed: #1a, done (2026-11-21) |
 | #2 | The friction of `pin` with module tables (atmos-lang#40) | settled by set :out (#16) |
-| #3 | When to relax exactness for expressiveness | open, waits for the author |
+| #3 | When to relax exactness for expressiveness | decided: #3a (2026-11-21) |
 | #4 | Going back on the first migration after the relaxed rules of pin | closed: done in the second migration (#15) |
 | #5 | Moved from F5 to F6: game over menu, combat text, transform and block powers | open, work |
 | #6 | F6: items, inventory, HUD, menus, pickup, loot of events, what is not drawn | open, work |
@@ -26,13 +26,14 @@ Last review: 2026-11-18, through the whole conversation.
 | #13 | Scope of F5 by the data of the alpha demo | reported, not acknowledged |
 | #14 | Options added to the patch of the original | reported, not acknowledged |
 | #15 | The two migrations to the rules of pin | reported, not acknowledged |
-| #16 | The experiment of a per-map context (branch `exp-map-context`) | settled by the session (#16c with set :out), to be confirmed |
+| #16 | The experiment of a per-map context (branch `exp-map-context`) | closed: #16c, confirmed (2026-11-21) |
 | #17 | Event powers (traps) are queued and never activated | closed: done |
 | #18 | Other reports: `until` of the compiler, the corrupted golden, the permission to install | reported, not acknowledged |
 
 ## A. Waiting for an answer of the author
 
-#1 **The remotes of the checkouts.** The compiler moved to `ia-atmos/lang`;
+#1 (Closed: #1a, authorized by the author on 2026-11-21; both `origin`s
+now name `ia-atmos/lang` and `ia-atmos/sdl-flare`.) **The remotes of the checkouts.** The compiler moved to `ia-atmos/lang`;
 `git remote set-url origin https://github.com/ia-atmos/lang` in
 `../ceu-atmos` was denied by the permission check of the session. The
 same for this repository, now `ia-atmos/sdl-flare` (was `fsantanna/flare`,
@@ -41,7 +42,8 @@ Pushes and pulls go through the redirects; nothing breaks.
 - #1a (recommended) the author runs both `git remote set-url`, or allows them.
 - #1b leave them: the redirects work.
 
-#3 **When to relax exactness for expressiveness** (the rule of the author
+#3 (Decided: #3a, by the author on 2026-11-21: relax only after F7, with
+a tag on the faithful commit.) **When to relax exactness for expressiveness** (the rule of the author
 of 2026-11-14: allowed once a port is fully faithful, keeping the intent
 of the original). Where Flare stands: the 31 stored runs (walks, a
 fight, duels, stands, and a pickup in 13 maps) give the same trace as the
@@ -56,7 +58,7 @@ defect.
   (`doc/state.md`), and the hidden draws of the original.
 - #3b relax now, piece by piece.
 
-#16 (Settled by the session on 2026-11-21, to be confirmed: `set :out`
+#16 (Closed: #16c, confirmed by the author on 2026-11-21. Settled by the session first: `set :out`
 is on `main`, after atmos-pin#16b was approved (ia-atmos/lang a80a77f):
 the five places refer to the entity itself, the ids and copies are gone,
 the 32 runs are identical. Reversible: the branch `exp-map-context`
