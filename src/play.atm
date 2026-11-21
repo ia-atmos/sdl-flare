@@ -250,6 +250,8 @@ task MapRun (path, pos, h) {
         fl.col_block(me.x, me.y, false)
     }
     play.new_map_draws(p@0, p@1, true)
+    ;; NPCManager::handleNewMap, after the enemies
+    pin npcs = npc.load(m)
     set combat.list = []
     set loot.ground = []
     set loot.map = []
@@ -274,6 +276,13 @@ task MapRun (path, pos, h) {
                 val g = anim.gfx(e.cur.a, e.cur.sub, e.dir)
                 if g && !gone && !fl.col_outside(e.x, e.y) {
                     fl.ren(e.corpse, g@0, g@1, g@2, g@3, g@4, g@5, g@6, e.x, e.y, 1, false)
+                }
+            }
+            ;; NPCManager::addRenders
+            loop _, n in npcs {
+                val g = anim.gfx(n.cur.a, n.cur.sub, n.dir)
+                if g && !fl.col_outside(n.x, n.y) {
+                    fl.ren(false, g@0, g@1, g@2, g@3, g@4, g@5, g@6, n.x, n.y, 1, false)
                 }
             }
             ;; LootManager::addRenders: below the objects when landed
@@ -333,6 +342,7 @@ task MapRun (path, pos, h) {
         }
         hazards_logic(ens, hp)
         loot.logic(hp)
+        npc.logic(npcs)
         ;; checkTeleport: another map ends this one
         if w.teleport {
             val tp = w.teleport
