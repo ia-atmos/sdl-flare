@@ -34,3 +34,4 @@ pickup-goblin_warrens
 trap-ice_hall
 chest-ancient_temple
 pickup-averguard_academy
+equip-ancient_temple

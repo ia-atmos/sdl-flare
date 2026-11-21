@@ -1,0 +1,8 @@
+# env: FLARE_MAP=maps/ancient_temple.txt FLARE_POS=80.5,38.5 FLARE_FRAMES=1200 FLARE_RNG=1 FLARE_SEED=2
+# destroy a cursed grave, pick up the leather hood it drops (equipped at once:
+# absorption 1), then stand while its zombies hit the hero
+20 move 853 380
+20 down 1
+380 up 1
+400 down 1
+404 up 1
