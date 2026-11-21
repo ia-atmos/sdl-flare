@@ -94,12 +94,18 @@ game over menu (continue: teleport to the respawn map, the death penalty
 of the inventory), the combat text, and the powers of types transform and
 block (only the hero's).
 
-#6 F6: items and inventory, the HUD and menus of the slice, loot picked up
-with a click (`checkPickup`), the loot of events (chests:
-`checkMapForLoot`, not executed yet); on screen: the layers of the hero
-(equipment), NPCs (the captured trader of `cave1`), the animations of
-effects on entities (shield, heal). Done: the loot on the ground is drawn,
-and currency is picked up automatically (run `pickup-goblin_warrens`).
+#6 F6: items and inventory, the HUD and menus of the slice; on screen: the
+layers of the hero (equipment), NPCs (the captured trader of `cave1`), the
+animations of effects on entities (shield, heal). Done, each with a run
+identical to the original: the loot on the ground is drawn; currency is
+picked up automatically (`pickup-goblin_warrens`); the loot of events
+drops (`chest-ancient_temple`); a stack is picked up with a click
+(`pickup-averguard_academy`); traps fire (#17). Next: the equipment, in
+one piece (slots of `menus/inventory.txt`, the requirements of an item,
+auto-equip on pickup, the recalculation of the stats with the bonuses and
+the absorption of the items), since an item picked up may be equipped at
+once and change every later hit; then the inventory slots and stacking,
+the click on the tooltip of a stack, and ACCEPT.
 
 #7 F7: the alpha demo played by script, end to end; the benchmark of the
 port against `doc/bench.md` (measured so far: about 11.3 s of CPU and
