@@ -301,6 +301,10 @@ task MapRun (path, pos, h) {
         ;; MenuManager::logic: the equipment changed in the last frame
         if hp.equip_changed {
             hero_apply_equipment(hp)
+            ;; GameStatePlay::checkEquipmentChange: the layers again, and
+            ;; the hero in stance (Entity::loadAnimations)
+            hero_load_layers(hp)
+            hero_anim(hp, "stance")
             set hp.equip_changed = false
         }
         ;; GameStatePlay::checkLoot: currency picked up goes to the hero
@@ -356,6 +360,7 @@ task MapRun (path, pos, h) {
 task Play (path, pos, class) {
     pin st = hero.stats(class)
     hero.load_sfx("male")
+    hero.load_layers()
     hero.load_steps(st.sfx_step)
 
     ;; GameStatePlay(): the hidden draw of its handleNewMap
@@ -375,9 +380,19 @@ task Play (path, pos, class) {
 
     loop on :draw {
         val hp = h.pub
-        val g = anim.gfx(hp.cur.a, hp.cur.sub, hp.dir)
-        if g && !os.getenv("FLARE_NOHERO") {
-            fl.ren(false, g@0, g@1, g@2, g@3, g@4, g@5, g@6, hp.x, hp.y, 0, true)
+        ;; Entity::addRenders of the hero: its layers in the order of its
+        ;; direction, each at the frame of the animation of the hero
+        if !os.getenv("FLARE_NOHERO") {
+            loop k, li in hero.layer_def@(hp.dir) {
+                val ls = hp.layer_sets@li
+                if ls {
+                    val a = anim.get(ls, hp.cur.a.name)
+                    val g = anim.gfx(a, hp.cur.sub, hp.dir)
+                    if g {
+                        fl.ren(false, g@0, g@1, g@2, g@3, g@4, g@5, g@6, hp.x, hp.y, k + 1, true)
+                    }
+                }
+            }
         }
         fl.map_render()
         fl.ren_clear()          ;; the maps add theirs before the next draw

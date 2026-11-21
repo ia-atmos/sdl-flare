@@ -26,6 +26,8 @@ pin hero = [
     equipment = [],     ;; the items of the class
     currency = 0,       ;; the currency of the class
     slots = [],         ;; the types of the equipment slots (menus/inventory.txt)
+    layers = [],        ;; the types of the layers, in order (engine/hero_layers.txt)
+    layer_def = [],     ;; direction -> the indexes of `layers` to draw, in order
 ]
 
 ;; the sounds of the avatar, as StatBlock::loadHeroSFX
@@ -121,6 +123,65 @@ func hero.stats (class) {
     set st.mp = base.mp || 0
     set st.base = base
     st
+}
+
+;; StatBlock::loadRenderLayerStat: the layers of the hero, by direction
+func hero.load_layers () {
+    set hero.layers = []
+    set hero.layer_def = []
+    loop d in 8 {
+        set hero.layer_def@d = []
+    }
+    loop _, sec in ini.load("engine/hero_layers.txt") || [] {
+        loop _, kv in sec.keys {
+            if kv@0 == "layer" {
+                pin l = parse.list(kv@1)
+                val d = parse.direction(l@0)
+                var i = 1
+                loop {
+                    while (l@i != nil) && (l@i != "")
+                    var pos = nil
+                    loop j, t in hero.layers {
+                        if (pos == nil) && (t == l@i) {
+                            set pos = j
+                        }
+                    }
+                    if pos == nil {
+                        set pos = #hero.layers
+                        set hero.layers@+ = l@i
+                    }
+                    set hero.layer_def@d@+ = pos
+                    set i += 1
+                }
+            }
+        }
+    }
+}
+
+;; Entity::loadAnimations of the hero: the animation set of each layer,
+;; from the gfx of the item in the slot of its type, else the head of the
+;; portrait, else the default of the type (Avatar::getGfxFromType)
+func hero_load_layers (h) {
+    set h.layer_sets = []
+    loop i, t in hero.layers {
+        var gfx = nil
+        loop s, st in hero.slots {
+            val e = h.equip@s
+            val it = e && item.get(e.id)
+            if it && (st == t) && it.gfx {
+                set gfx = it.gfx
+            }
+        }
+        if (gfx == nil) && (t == "head") {
+            set gfx = "head_short"
+        }
+        if (gfx == nil) && ini.locate("animations/avatar/male/default_" ++ t ++ ".txt") {
+            set gfx = "default_" ++ t
+        }
+        if gfx {
+            set h.layer_sets@i = anim.load("animations/avatar/male/" ++ gfx ++ ".txt")
+        }
+    }
 }
 
 ;; ItemManager::requirementsMet, for the primary stats (no item gives
@@ -419,6 +480,7 @@ task Hero (st, pos) {
         }
     }
     hero_apply_equipment(h)
+    hero_load_layers(h)
     set h.cur = anim.cursor(anim.get(h.anims, "stance"))
     ;; Entity::loadAnimations: the cooldown of a hit is the duration of
     ;; the hit animation, from full (Timer::setDuration)

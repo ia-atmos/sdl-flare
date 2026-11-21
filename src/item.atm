@@ -37,6 +37,7 @@ func item.init () {
                 }
                 it == nil => nil
                 k == "item_type" => { set it.type = v }
+                k == "gfx" => { set it.gfx = v }
                 k == "dmg" => {
                     pin l = parse.list(v)
                     val lo = parse.float(l@1)
