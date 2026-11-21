@@ -1,0 +1,7 @@
+# env: FLARE_MAP=maps/averguard_academy.txt FLARE_POS=61.5,15.5 FLARE_FRAMES=400 FLARE_RNG=1
+# kill the first enemy of the map, then click its item on the ground: a pickup of an item
+20 move 853 380
+20 down 1
+260 up 1
+300 down 1
+304 up 1

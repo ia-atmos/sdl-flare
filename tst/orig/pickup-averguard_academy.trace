@@ -1,0 +1,516 @@
+0 map maps/averguard_academy.txt
+0 spawn 0 Bench 0 61.5 15.5 90
+0 spawn 1 Skeletal Mage 0 60.5 14.5 90
+0 spawn 2 Skeletal Mage 0 65.5 14.5 90
+0 spawn 3 Rotting Zombie 0 50.5 25.5 25
+0 spawn 4 Zombie 0 50.5 30.5 40
+0 spawn 5 Zombie 0 45.5 85.5 40
+0 spawn 6 Professor Langlier 0 5.5 91.5 200
+0 spawn 7 Iceclaw Zombie 0 62.5 28.5 80
+0 spawn 8 Iceclaw Zombie 0 36.5 34.5 80
+0 spawn 9 Skeletal Warrior 0 41.5 39.5 130
+0 spawn 10 Bloodthirsty Zombie 0 41.5 26.5 135
+0 spawn 11 Zombie Brute 0 22.5 33.5 100
+0 spawn 12 Zombie Brute 0 22.5 22.5 100
+0 spawn 13 Skeletal Archer 0 30.5 34.5 75
+0 spawn 14 Bloodthirsty Zombie 0 17.5 38.5 135
+0 spawn 15 Iceclaw Zombie 0 17.5 32.5 80
+0 spawn 16 Iceclaw Zombie 0 17.5 27.5 80
+0 spawn 17 Zombie Brute 0 24.5 22.5 100
+0 spawn 18 Antlion Hatchling 0 54.5 69.5 40
+0 spawn 19 Antlion 0 52.5 74.5 70
+0 spawn 20 Antlion Hatchling 0 56.5 73.5 40
+0 spawn 21 Skeletal Mage 0 45.5 43.5 90
+0 spawn 22 Skeletal Mage 0 55.5 61.5 90
+0 spawn 23 Skeletal Mage 0 54.5 47.5 90
+0 spawn 24 Skeletal Mage 0 33.5 59.5 90
+0 spawn 25 Zombie Brute 0 43.5 70.5 100
+0 spawn 26 Iceclaw Zombie 0 42.5 48.5 80
+0 spawn 27 Zombie Brute 0 44.5 44.5 100
+0 spawn 28 Zombie Brute 0 54.5 64.5 100
+0 spawn 29 Iceclaw Zombie 0 30.5 48.5 80
+0 spawn 30 Bloodthirsty Zombie 0 49.5 70.5 135
+0 spawn 31 Iceclaw Zombie 0 50.5 56.5 80
+0 spawn 32 Bloodthirsty Zombie 0 38.5 63.5 135
+0 spawn 33 Bloodthirsty Zombie 0 25.5 63.5 135
+0 spawn 34 Bloodthirsty Zombie 0 43.5 71.5 135
+0 spawn 35 Bloodthirsty Zombie 0 42.5 65.5 135
+0 spawn 36 Bloodthirsty Zombie 0 34.5 71.5 135
+0 spawn 37 Zombie Brute 0 42.5 45.5 100
+0 spawn 38 Iceclaw Zombie 0 38.5 43.5 80
+0 spawn 39 Iceclaw Zombie 0 31.5 51.5 80
+0 spawn 40 Iceclaw Zombie 0 39.5 66.5 80
+0 spawn 41 Skeletal Archer 0 18.5 68.5 75
+0 spawn 42 Skeletal Archer 0 19.5 73.5 75
+0 spawn 43 Skeletal Warrior 0 13.5 71.5 130
+0 spawn 44 Skeletal Archer 0 24.5 70.5 75
+0 spawn 45 Antlion Blinker 0 23.5 70.5 90
+0 spawn 46 Antlion 0 24.5 90.5 70
+0 spawn 47 Antlion Hatchling 0 23.5 77.5 40
+0 spawn 48 Antlion Hatchling 0 23.5 72.5 40
+0 rng 320
+1 power 1 132 60.5 14.5
+1 power 2 132 65.5 14.5
+1 rng 8
+2 rng 4
+3 rng 4
+4 rng 4
+5 rng 4
+6 rng 4
+7 rng 4
+8 rng 4
+9 rng 4
+10 state 1 1 60.5412483 14.5412483
+10 rng 4
+11 rng 2
+12 rng 2
+13 rng 2
+14 state 1 0 60.6649933 14.6649933
+14 state 2 1 65.4416656 14.5
+14 rng 2
+15 rng 1
+16 rng 1
+17 rng 1
+18 rng 1
+19 rng 1
+20 state 0 2 61.5 15.5
+20 rng 2
+21 rng 1
+22 rng 1
+23 rng 1
+24 rng 1
+25 rng 1
+26 rng 1
+27 rng 1
+28 rng 1
+29 rng 1
+30 rng 1
+31 power 0 1 60.6649933 14.6649933
+31 rng 4
+32 rng 1
+33 rng 1
+34 rng 1
+35 rng 1
+36 rng 1
+37 rng 1
+38 rng 1
+39 rng 1
+40 rng 1
+41 rng 1
+42 rng 1
+43 state 0 0 61.5 15.5
+43 rng 1
+44 rng 1
+45 rng 1
+46 rng 1
+47 rng 1
+48 state 0 2 61.5 15.5
+48 rng 2
+49 rng 1
+50 rng 1
+51 rng 1
+52 rng 1
+53 rng 1
+54 rng 1
+55 rng 1
+56 rng 1
+57 rng 1
+58 rng 1
+59 power 0 1 60.6649933 14.6649933
+59 state 1 5 60.6649933 14.6649933
+59 hit 1 59
+59 rng 6
+60 rng 2
+61 rng 2
+62 rng 2
+63 rng 2
+64 rng 2
+65 rng 2
+66 rng 2
+67 state 1 0 60.6649933 14.6649933
+67 rng 2
+68 state 2 0 62.5549774 14.9949799
+68 rng 3
+69 rng 3
+70 rng 3
+71 state 0 0 61.5 15.5
+71 rng 3
+72 rng 3
+73 rng 3
+74 rng 3
+75 state 2 2 62.5549774 14.9949799
+75 rng 5
+76 state 0 2 61.5 15.5
+76 rng 3
+77 rng 2
+78 rng 2
+79 rng 2
+80 rng 2
+81 rng 2
+82 rng 2
+83 rng 2
+84 rng 2
+85 rng 2
+86 power 2 1 61.5 15.5
+86 state 0 5 61.5 15.5
+86 hit 0 81
+86 rng 7
+87 rng 2
+88 rng 2
+89 rng 2
+90 rng 2
+91 rng 2
+92 rng 2
+93 rng 2
+94 rng 2
+95 state 0 0 61.5 15.5
+95 rng 2
+96 rng 2
+97 rng 2
+98 state 2 0 62.5549774 14.9949799
+98 rng 2
+99 rng 2
+100 state 0 2 61.5 15.5
+100 rng 3
+101 rng 2
+102 rng 2
+103 rng 2
+104 rng 2
+105 rng 2
+106 rng 2
+107 rng 2
+108 rng 2
+109 rng 2
+110 rng 2
+111 power 0 1 60.6649933 14.6649933
+111 state 1 5 60.6649933 14.6649933
+111 hit 1 37
+111 rng 7
+112 rng 1
+113 rng 1
+114 rng 1
+115 rng 1
+116 rng 1
+117 rng 1
+118 rng 1
+119 state 1 0 60.6649933 14.6649933
+119 rng 1
+120 rng 2
+121 rng 2
+122 rng 2
+123 state 0 0 61.5 15.5
+123 rng 2
+124 rng 2
+125 rng 2
+126 rng 2
+127 rng 2
+128 state 0 2 61.5 15.5
+128 rng 3
+129 rng 2
+130 rng 2
+131 rng 2
+132 rng 2
+133 rng 2
+134 rng 2
+135 rng 2
+136 rng 2
+137 rng 2
+138 rng 2
+139 power 0 1 60.6649933 14.6649933
+139 rng 5
+140 rng 2
+141 rng 2
+142 rng 2
+143 rng 2
+144 rng 2
+145 rng 2
+146 rng 2
+147 rng 2
+148 rng 2
+149 rng 2
+150 rng 2
+151 state 0 0 61.5 15.5
+151 state 1 2 60.6649933 14.6649933
+151 rng 4
+152 rng 1
+153 rng 1
+154 rng 1
+155 rng 1
+156 state 0 2 61.5 15.5
+156 rng 2
+157 rng 1
+158 rng 2
+159 rng 2
+160 rng 2
+161 rng 2
+162 power 1 1 61.5 15.5
+162 rng 5
+163 rng 2
+164 rng 2
+165 rng 2
+166 rng 2
+167 power 0 1 60.6649933 14.6649933
+167 state 1 5 60.6649933 14.6649933
+167 hit 1 3
+167 state 2 2 62.5549774 14.9949799
+167 rng 9
+168 rng 1
+169 rng 1
+170 rng 1
+171 rng 1
+172 rng 1
+173 rng 1
+174 rng 1
+175 state 1 0 60.6649933 14.6649933
+175 rng 1
+176 rng 1
+177 rng 1
+178 power 2 1 61.5 15.5
+178 state 0 5 61.5 15.5
+178 hit 0 69.7891541
+178 rng 6
+179 rng 1
+180 rng 1
+181 rng 1
+182 rng 1
+183 rng 1
+184 rng 1
+185 rng 1
+186 rng 1
+187 state 0 0 61.5 15.5
+187 rng 1
+188 state 0 2 61.5 15.5
+188 rng 2
+189 rng 1
+190 state 2 0 62.5549774 14.9949799
+190 rng 1
+191 rng 1
+192 rng 1
+193 rng 1
+194 rng 1
+195 rng 1
+196 rng 1
+197 rng 1
+198 rng 1
+199 power 0 1 60.6649933 14.6649933
+199 loot 73 1 60.5 14.5
+199 state 1 6 60.6649933 14.6649933
+199 hit 1 0
+199 rng 8
+200 rng 2
+201 rng 1
+202 rng 1
+203 rng 1
+204 rng 1
+205 rng 1
+206 rng 1
+207 rng 1
+208 rng 1
+209 rng 1
+210 rng 1
+211 state 0 0 61.5 15.5
+211 rng 1
+212 rng 1
+213 rng 1
+214 rng 1
+215 rng 1
+216 state 0 2 61.5 15.5
+216 rng 2
+217 rng 1
+218 rng 1
+219 rng 1
+220 rng 1
+221 rng 1
+222 rng 1
+223 rng 1
+224 rng 1
+225 rng 1
+226 rng 1
+227 power 0 1 61.4583321 15.458333
+227 rng 1
+228 rng 1
+229 rng 1
+230 rng 1
+231 rng 1
+232 rng 1
+233 rng 1
+234 rng 1
+235 rng 1
+236 rng 1
+237 rng 1
+238 rng 1
+239 state 0 0 61.5 15.5
+239 rng 1
+240 rng 1
+241 rng 1
+242 rng 1
+243 rng 1
+244 state 0 2 61.5 15.5
+244 rng 2
+245 rng 1
+246 rng 1
+247 rng 1
+248 rng 1
+249 rng 1
+250 rng 2
+251 rng 2
+252 rng 2
+253 rng 2
+254 rng 2
+255 power 0 1 61.4583321 15.458333
+255 rng 2
+256 rng 2
+257 rng 2
+258 rng 2
+259 rng 2
+260 rng 2
+261 rng 2
+262 rng 2
+263 rng 2
+264 rng 2
+265 rng 2
+266 state 2 2 62.5549774 14.9949799
+266 rng 4
+267 state 0 0 61.5 15.5
+267 rng 1
+268 rng 1
+269 rng 1
+270 rng 1
+271 rng 1
+272 rng 1
+273 rng 1
+274 rng 1
+275 rng 1
+276 rng 1
+277 power 2 1 61.5 15.5
+277 rng 4
+278 rng 1
+279 rng 1
+280 rng 1
+281 rng 1
+282 rng 1
+283 rng 1
+284 rng 1
+285 rng 1
+286 rng 1
+287 rng 1
+288 rng 1
+289 state 2 0 62.5549774 14.9949799
+289 rng 1
+290 rng 1
+291 rng 1
+292 rng 1
+293 rng 1
+294 rng 1
+295 rng 1
+296 rng 1
+297 rng 1
+298 rng 1
+299 rng 1
+300 pickup 73 1
+300 rng 1
+301 rng 1
+302 rng 1
+303 rng 1
+304 rng 1
+305 rng 1
+306 rng 1
+307 rng 1
+308 rng 1
+309 rng 1
+310 rng 1
+311 rng 1
+312 rng 1
+313 rng 1
+314 rng 1
+315 rng 1
+316 rng 1
+317 rng 1
+318 rng 1
+319 rng 1
+320 rng 1
+321 rng 1
+322 rng 1
+323 rng 1
+324 rng 1
+325 rng 1
+326 rng 1
+327 rng 1
+328 rng 1
+329 rng 1
+330 rng 1
+331 rng 1
+332 rng 1
+333 rng 1
+334 rng 1
+335 rng 1
+336 rng 1
+337 rng 1
+338 rng 1
+339 rng 1
+340 rng 1
+341 rng 1
+342 rng 1
+343 rng 1
+344 rng 1
+345 rng 1
+346 rng 1
+347 rng 1
+348 rng 1
+349 rng 2
+350 rng 2
+351 rng 2
+352 rng 2
+353 rng 2
+354 rng 2
+355 rng 2
+356 rng 2
+357 rng 2
+358 rng 2
+359 rng 2
+360 rng 2
+361 rng 2
+362 rng 2
+363 rng 2
+364 rng 2
+365 rng 2
+366 rng 2
+367 rng 2
+368 rng 2
+369 rng 2
+370 rng 2
+371 rng 2
+372 rng 2
+373 rng 2
+374 state 2 2 62.5549774 14.9949799
+374 rng 4
+375 rng 1
+376 rng 1
+377 rng 1
+378 rng 1
+379 rng 1
+380 rng 1
+381 rng 1
+382 rng 1
+383 rng 1
+384 rng 1
+385 power 2 1 61.5 15.5
+385 state 0 5 61.5 15.5
+385 hit 0 56.8147507
+385 rng 6
+386 rng 1
+387 rng 1
+388 rng 1
+389 rng 1
+390 rng 1
+391 rng 1
+392 rng 1
+393 rng 1
+394 state 0 0 61.5 15.5
+394 rng 1
+395 rng 1
+396 rng 1
+397 state 2 0 62.5549774 14.9949799
+397 rng 1
+398 rng 1
+399 rng 1
