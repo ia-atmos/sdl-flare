@@ -14,6 +14,8 @@ pin loot = [
     ground = [],        ;; the stacks on the map: [id, q, x, y, cur, on_ground]
     autopickup_currency = false,    ;; of engine/loot.txt
     autopickup_range = 1.0,
+    map = [],           ;; the loot of events, to drop in the next loot step
+    unblock = [],       ;; the tiles blocked by drops of this loot step
 ]
 
 ;; LootManager::addLoot: a stack on the map, aligned to 1/16 of a tile,
@@ -136,11 +138,15 @@ func loot_drop (e, x, y, hero) {
             if (sx == math.floor(px)) && (sy == math.floor(py)) {
                 set px, py = hero.x, hero.y
             }
+            fl.col_block(px, py, false)
+            set loot.unblock@+ = [px, py]
         }
     }
     val q = rand_between(e.qmin, e.qmax)
-    fl.trace(string.format("loot %d %d %.9g %.9g", e.id, q, fl.f32(px), fl.f32(py)))
-    loot_add(e.id, q, px, py)
+    ;; an item id of 0 is currency
+    val id = if e.id == 0 => loot.currency => e.id
+    fl.trace(string.format("loot %d %d %.9g %.9g", id, q, fl.f32(px), fl.f32(py)))
+    loot_add(id, q, px, py)
 }
 
 ;; LootManager::checkLoot
@@ -234,4 +240,17 @@ func loot.logic (hero) {
         }
     }
     set loot.dropping = []
+    ;; LootManager::checkMapForLoot
+    loop _, m in loot.map {
+        val n = if m.count@1 != 0 => rand_between(m.count@0, m.count@1) => rand_between(1, loot.drop_max)
+        loop _ in n {
+            loot_check(m.entries, m.x, m.y, hero)
+        }
+    }
+    set loot.map = []
+    ;; the tiles blocked by the drops are free again
+    loop _, t in loot.unblock {
+        fl.col_unblock(t@0, t@1)
+    }
+    set loot.unblock = []
 }

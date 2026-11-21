@@ -252,6 +252,7 @@ task MapRun (path, pos, h) {
     play.new_map_draws(p@0, p@1, true)
     set combat.list = []
     set loot.ground = []
+    set loot.map = []
     set play.seen = nil
     set play.seen_es = []
     fl.col_block(hp.x, hp.y, false)

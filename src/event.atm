@@ -55,6 +55,14 @@ func event_components (ev, k, v) {
                 set ev.comps@i.type = "loot"
             }
         }
+        "loot_count" => {
+            var lo, hi = parse.int(l@0), parse.int(l@1)
+            if (lo != 0) || (hi != 0) {
+                set lo = math.max(lo, 1)
+                set hi = math.max(hi, lo)
+            }
+            set ev.comps@+ = [type = k, min = lo, max = hi]
+        }
         "intermap" => {
             set ev.comps@+ = [type = k, s = l@0,
                 x = if (l@1 != nil) && (l@1 != "") => parse.int(l@1) => -1,
@@ -190,8 +198,23 @@ func event.execute (ev, w, h) {
     }
     timer_begin(ev.cooldown)
     fl.trace("event " ++ ev.activate ++ " " ++ ev.loc@0 ++ " " ++ ev.loc@1 ++ " " ++ ev.loc@2 ++ " " ++ ev.loc@3 ++ " " ++ #ev.comps)
+    var map_loot = nil
     loop _, c in ev.comps {
         match c.type {
+            ;; the loot of the event drops in the next loot step, at its
+            ;; hotspot (copies: the event keeps its own list)
+            "loot" => {
+                if map_loot == nil {
+                    set map_loot = vector.insert(loot.map, [entries = [], count = [0, 0],
+                        x = ev.hotspot@0, y = ev.hotspot@1])
+                    loop _, k in ev.comps {
+                        if k.type == "loot_count" {
+                            set map_loot.count = [k.min, k.max]
+                        }
+                    }
+                }
+                set map_loot.entries@+ = X.copy(c)
+            }
             "set_status" => { set campaign.status@(c.s) = true }
             "unset_status" => { set campaign.status@(c.s) = nil }
             "intermap" => {
