@@ -89,10 +89,11 @@ as requests. Reported to atmos-pin.
 
 ## B. Known work, not done
 
-#5 Moved from F5 to F6 (F5 closed: its logic matches on the runs): the
-game over menu (continue: teleport to the respawn map, the death penalty
-of the inventory), the combat text, and the powers of types transform and
-block (only the hero's).
+#5 Moved from F5 to F6. Done: the death of the hero, its death penalty
+(half of the currency), the game over menu and its Continue, the respawn
+at the place of respawn of the map (`respawn-ice_hall`). Left: the menu
+drawn, its Save & Exit, the combat text, and the powers of types
+transform and block (only the hero's).
 
 #6 F6: items and inventory, the HUD and menus of the slice. Done, each
 with a run or a screenshot identical to the original: the loot on the
