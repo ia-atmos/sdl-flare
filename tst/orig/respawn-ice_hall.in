@@ -1,0 +1,5 @@
+# env: FLARE_MAP=maps/brothers_lair_ice_hall.txt FLARE_POS=21.5,16.5 FLARE_FRAMES=700 FLARE_RNG=1
+# next to the skeletal prophet until the hero dies; then Continue on the game over menu: the respawn
+450 move 854 290
+450 down 1
+454 up 1
