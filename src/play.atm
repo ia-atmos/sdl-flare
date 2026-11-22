@@ -243,6 +243,9 @@ task MapRun (path, pos, h) {
     set play.next_id = 1
     val p = pos || m.hero
     set hp.x, hp.y = fl.f32(p@0), fl.f32(p@1)
+    ;; GameStatePlay::checkTeleport: the map and place of respawn
+    set hp.respawn_map = path
+    set hp.respawn_pos = [hp.x, hp.y]
     set hp.camera_lock = true
     fl.cam_warp(hp.x, hp.y)
     ;; Map::load: the events, with a StatBlock for those with a power
@@ -277,6 +280,16 @@ task MapRun (path, pos, h) {
     fl.tset_logic()
     fl.cam_logic()
     play.trace(hp, ens)
+    ;; GameStatePlay::logic, after the trace: the hero respawned
+    if hp.respawn {
+        set hp.respawn = false
+        set hp.corpse = false
+        set hp.state = STATE.STANCE
+        set hp.next = [act = Stance]
+        hero_apply_equipment(hp)
+        set hp.hp = hp.hp_max
+        set hp.mp = hp.mp_max || hp.mp
+    }
 
     ;; EntityManager::addRenders and HazardManager::addRenders: the
     ;; enemies (a corpse below the objects, until its timeout), the hazards
@@ -321,6 +334,30 @@ task MapRun (path, pos, h) {
     }
 
     loop on :frame {
+        ;; MenuInventory::logic: the death penalty, half of the currency
+        if hp.death_penalty {
+            set hp.death_penalty = false
+            if hp.currency > 0 {
+                set hp.currency = hp.currency - math.floor(fl.f32(fl.f32(hp.currency * 50) / 100))
+            }
+        }
+        ;; MenuGameOver::logic: the button Continue (WidgetButton::checkClick)
+        if hp.game_over {
+            val mx, my = fl.mouse()
+            val inside = (mx >= 661) && (my >= 264) && (mx < (661 + 384)) && (my < (264 + 48))
+            if !fl.locked(Input.MAIN1) {
+                if hp.go_pressed && inside {
+                    set hp.go_pressed = false
+                    set hp.continue_clicked = true
+                } else {
+                    set hp.go_pressed = false
+                    if fl.pressing(Input.MAIN1) && inside {
+                        fl.lock(Input.MAIN1, true)
+                        set hp.go_pressed = true
+                    }
+                }
+            }
+        }
         ;; MenuManager::logic: the equipment changed in the last frame
         if hp.equip_changed {
             hero_apply_equipment(hp)
@@ -349,6 +386,11 @@ task MapRun (path, pos, h) {
         set :out hp.cursor_enemy = play.focus(hp, ens)
         play.actions(hp)
         emit @h :hero.logic
+        if hp.respawn_request {
+            set hp.respawn_request = false
+            set hp.respawn = true
+            set w.teleport = [map = hp.respawn_map, pos = [hp.respawn_pos@0, hp.respawn_pos@1]]
+        }
         fl.rand()                       ;; handleSpawn: Map_Enemy()
         play_spawns(w, es, ens)
         loop _, t in ens {

@@ -447,11 +447,41 @@ task HDead (h, turning) {
     set h.next = nil
     loop {
         hero_anim(h, "die")
-        if anim.is_first(h.cur) && (anim.played(h.cur) < 1) && (#hero.sfx.die > 0) {
-            fl.rand()
+        if !h.corpse && anim.is_first(h.cur) && (anim.played(h.cur) < 1) {
+            ;; the death: the power cooldowns end, the death penalty is
+            ;; raised (MenuInventory::logic), MAIN1 is locked if pressed
+            timer_end_now(h.cooldown)
+            loop _, t in h.casting {
+                set t.cur = 0
+            }
+            set h.death_penalty = true
+            if fl.pressing(Input.MAIN1) {
+                fl.lock(Input.MAIN1, true)
+            }
+            if #hero.sfx.die > 0 {
+                fl.rand()
+            }
+        }
+        ;; the corpse, then the menu of the game over
+        if !h.corpse && ((anim.played(h.cur) >= 1) || (h.cur.a.name != "die")) {
+            set h.corpse = true
+            set h.game_over = true
+        }
+        ;; Continue: to the place of respawn (MapRun teleports the hero)
+        if h.game_over && h.continue_clicked {
+            set h.game_over = false
+            set h.continue_clicked = false
+            set h.respawn_request = true
         }
         await :hero.step
+        if h.next {
+            break h.next.act
+        }
     }
+}
+
+func timer_end_now (t) {
+    set t.cur = 0
 }
 
 ;; The hero in a map, from `pos`. `st`: the stats of hero.stats.
