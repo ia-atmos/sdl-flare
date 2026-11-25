@@ -1,0 +1,55 @@
+;; The mouse cursor of the game (CursorManager), drawn last, over the HUD.
+;;
+;;      cursor.init()       its images (engine/mouse_cursor.txt)
+;;      cursor.reset()      the start of a frame (GameSwitcher::logic): normal
+;;      cursor.low_hp(h)    GameStatePlay::logic: low on life or not
+;;      cursor.set(k)       "normal", "interact", "talk", or "attack"
+;;      cursor.draw()       at the mouse
+
+pin cursor = [
+    img = [],           ;; kind (with "lowhp_" for low life) -> [image, ox, oy]
+    cur = nil,          ;; the image chosen: [image, ox, oy]
+    low = false,
+]
+
+func cursor.init () {
+    loop _, s in ini.load("engine/mouse_cursor.txt") || [] {
+        loop _, kv in s.keys {
+            val l = parse.list(kv@1)
+            val path = l@0
+            val i = fl.img(ini.locate(path) || path)
+            val ox = if l@1 => parse.int(l@1) => 0
+            val oy = if l@2 => parse.int(l@2) => 0
+            set cursor.img@(kv@0) = [i, ox, oy]
+        }
+    }
+}
+
+;; CursorManager::setCursor: the cursor of low life if there is one for the
+;; kind, as `low` is when it is set
+func cursor.set (k) {
+    set cursor.cur = (cursor.low && cursor.img@("lowhp_" ++ k)) || cursor.img@k || cursor.img.normal
+}
+
+;; CursorManager::logic, before the state of the game: the cursor normal
+func cursor.reset () {
+    cursor.set("normal")
+}
+
+;; CursorManager::setLowHP (Avatar::isLowHp, with the threshold of 20% of
+;; settings)
+func cursor.low_hp (h) {
+    set cursor.low = (h.hp != 0) && (fl.f32(h.hp / fl.f32(fl.f32(math.max(h.hp_max, 1)) / fl.f32(100.0))) < 20)
+}
+
+;; CursorManager::render
+func cursor.draw () {
+    if os.getenv("FLARE_NOHUD") {
+        return nil
+    }
+    val c = cursor.cur
+    if c {
+        val mx, my = fl.mouse()
+        fl.draw(c@0, mx + c@1, my + c@2)
+    }
+}

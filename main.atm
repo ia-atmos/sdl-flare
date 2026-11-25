@@ -7,6 +7,7 @@
 include "engine/engine.atm"
 include "src/ini.atm"
 include "src/parse.atm"
+include "src/cursor.atm"
 include "src/anim.atm"
 include "src/font.atm"
 include "src/map.atm"
@@ -20,6 +21,7 @@ include "src/ai.atm"
 include "src/combat.atm"
 include "src/event.atm"
 include "src/npc.atm"
+include "src/hud.atm"
 include "src/play.atm"
 
 val dir = os.getenv("FLARE_DATA")
@@ -31,6 +33,9 @@ effect.init()
 item.init()
 loot.init()
 combat.init()
+hero.load_xp()
+hud.init()
+cursor.init()
 
 pin pos = if os.getenv("FLARE_POS") {
     pin l = parse.list(os.getenv("FLARE_POS"))

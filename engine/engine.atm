@@ -70,6 +70,12 @@ pin fl = [
         val h = `:number ({ FlImg* p = fl_img(fl_int($i)); p ? p->h : 0; })`
         return w, h
     },
+    ;; the size of the render (the view of the original)
+    view = func () {
+        val w = `:number FL_W`
+        val h = `:number FL_H`
+        return w, h
+    },
     ;; fl.draw(img, x, y): the whole image
     draw = func (i, x, y) {
         `fl_img_draw(fl_int($i), 0,0,0,0, fl_int($x),fl_int($y), 255, 0xFFFFFF, 0);`

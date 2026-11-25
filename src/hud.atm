@@ -1,0 +1,207 @@
+;; The HUD of GameStatePlay, drawn by MenuManager::render over the map.
+;;
+;;      hud.init()      its images and the positions of menus/*.txt
+;;      hud.logic(h)    the logic of the menus, before the hero's
+;;      hud.draw(h)     a frame of the menus over the map, for the hero `h`
+;;
+;; Done: the bars of life, mana, and experience (MenuStatBar), the action
+;; bar (MenuActionBar). Not drawn: tooltips and the
+;; labels of hotkeys (hidden by engine/widget_settings.txt).
+
+pin hud = [
+    img = [],           ;; the images by name
+    icon = 64,          ;; resolutions.txt: icon_size
+    bar = nil,          ;; the action bar: [x, y, w, h, slots]
+    state = [],         ;; the slots of the action bar, by hud.logic
+    stats = [],         ;; the bars: hp, mp, xp (MenuStatBar), by order
+]
+
+;; Utils::alignToScreenEdge of a rect of a menu
+func hud.align (al, x, y, w, h) {
+    val vw, vh = fl.view()
+    val hw, hh = vw // 2, vh // 2
+    match al {
+        "topleft"     => [x, y]
+        "top"         => [hw - (w // 2) + x, y]
+        "topright"    => [vw - w + x, y]
+        "left"        => [x, hh - (h // 2) + y]
+        "center"      => [hw - (w // 2) + x, hh - (h // 2) + y]
+        "right"       => [vw - w + x, hh - (h // 2) + y]
+        "bottomleft"  => [x, vh - h + y]
+        "bottom"      => [hw - (w // 2) + x, vh - h + y]
+        "bottomright" => [vw - w + x, vh - h + y]
+        else          => [x, y]
+    }
+}
+
+;; the keys of a menu file: pos and align, and the others as given
+func hud.menu (path) {
+    val m = [x = 0, y = 0, w = 0, h = 0, align = "topleft", keys = []]
+    loop _, s in ini.load(path) || [] {
+        loop _, kv in s.keys {
+            val k, v = kv@0, kv@1
+            match k {
+                "pos" => {
+                    pin l = parse.list(v)
+                    set m.x, m.y = parse.int(l@0), parse.int(l@1)
+                    set m.w, m.h = parse.int(l@2), parse.int(l@3)
+                }
+                "align" => { set m.align = v }
+                else => { set m.keys@+ = kv }
+            }
+        }
+    }
+    val p = hud.align(m.align, m.x, m.y, m.w, m.h)
+    set m.x, m.y = p@0, p@1
+    m
+}
+
+func hud.image (name) {
+    if hud.img@name == nil {
+        set hud.img@name = fl.img(ini.locate(name) || name)
+    }
+    hud.img@name
+}
+
+func hud.init () {
+    set hud.icon = 64
+    loop _, s in ini.load("engine/resolutions.txt") || [] {
+        loop _, kv in s.keys {
+            if kv@0 == "icon_size" {
+                set hud.icon = parse.int(kv@1)
+            }
+        }
+    }
+    ;; MenuActionBar: slot=index,x,y for 1 to 10, slot_M1 and slot_M2 are
+    ;; 11 and 12 (indexes 10 and 11 of the actionbar of the class)
+    val m = hud.menu("menus/actionbar.txt")
+    val slots = []
+    loop _, kv in m.keys {
+        val k = kv@0
+        if (k == "slot") || (k == "slot_M1") || (k == "slot_M2") {
+            pin l = parse.list(kv@1)
+            val i = match k {
+                "slot" => parse.int(l@0) - 1
+                "slot_M1" => 10
+                else => 11
+            }
+            val o = if k == "slot" => 1 => 0
+            set slots@i = [m.x + parse.int(l@(o)), m.y + parse.int(l@(o + 1))]
+        }
+    }
+    set hud.bar = [x = m.x, y = m.y, w = m.w, h = m.h, slots = slots]
+    set hud.stats = [hud.statbar("hp"), hud.statbar("mp"), hud.statbar("xp")]
+}
+
+;; MenuStatBar: menus/<k>.txt
+func hud.statbar (k) {
+    val m = hud.menu("menus/" ++ k ++ ".txt")
+    val b = [kind = k, x = m.x, y = m.y, pos = [0, 0, m.w, m.h], fill = nil,
+             off = [0, 0], gfx = nil, bg = nil, cur = 0, max = 0]
+    loop _, kv in m.keys {
+        val k, v = kv@0, kv@1
+        match k {
+            "bar_pos" => {
+                val l = parse.list(v)
+                set b.pos = [parse.int(l@0), parse.int(l@1), parse.int(l@2), parse.int(l@3)]
+            }
+            "bar_fill_size" => {
+                val l = parse.list(v)
+                set b.fill = [parse.int(l@0), parse.int(l@1)]
+            }
+            "bar_fill_offset" => {
+                val l = parse.list(v)
+                set b.off = [parse.int(l@0), parse.int(l@1)]
+            }
+            "bar_gfx" => { set b.gfx = v }
+            "bar_gfx_background" => { set b.bg = v }
+        }
+    }
+    set b.fill = b.fill || [b.pos@2, b.pos@3]
+    b
+}
+
+;; the icon `n` of images/icons/icons.png at (x,y)
+func hud.draw_icon (n, x, y) {
+    val ic = hud.image("images/icons/icons.png")
+    val iw, _ = fl.size(ic)
+    val cols = iw // hud.icon
+    fl.part(ic, (n % cols) * hud.icon, (n // cols) * hud.icon, hud.icon, hud.icon, x, y)
+}
+
+;; MenuActionBar::logic, at the start of the logic of a frame (before the
+;; hero's): per slot, nil (empty), or [icon, enabled, cooldown]
+func hud.logic (h) {
+    val st = []
+    loop i in (0, 11) {
+        val id = hero.actionbar@i || 0
+        val pw = if id == 0 => nil => power.get(id)
+        if pw {
+            ;; StatBlock::canUsePower, as far as the slice needs it
+            val can = (h.hp > 0) && (pw.requires_mp <= h.mp) && !h.stun
+            val cast = h.casting@id
+            val casting = cast && !timer_end(cast) && (cast.dur > 0)
+            val cd = if can && casting => (cast.cur / cast.dur) => 1.0
+            set st@i = [pw.icon, !casting && can, cd]
+        }
+    }
+    set hud.state = st
+    ;; MenuStatBar::update
+    val hb, mb, xb = hud.stats@0, hud.stats@1, hud.stats@2
+    set hb.cur, hb.max = h.hp, h.hp_max
+    set mb.cur, mb.max = h.mp, h.mp_max
+    val l0 = hero.level_xp(h.level)
+    set xb.cur, xb.max = h.xp - l0, hero.level_xp(h.level + 1) - l0
+}
+
+;; MenuStatBar::render, horizontal: the background, then the fill
+func hud.draw_stat (b) {
+    val bx, by = b.pos@0 + b.x, b.pos@1 + b.y
+    if b.bg {
+        fl.part(hud.image(b.bg), 0, 0, b.pos@2, b.pos@3, bx, by)
+    }
+    val cur = math.min(b.cur, b.max)
+    val len = if b.kind == "xp" {
+        if b.max == 0 => 0 => ((cur * b.fill@0) // b.max)
+    } else {
+        if b.max == 0 => 0 => math.floor(fl.f32(fl.f32(cur * b.fill@0) / b.max))
+    }
+    val n = if (len == 0) && (cur > 0) => 1 => len
+    if b.gfx && (n > 0) {
+        fl.part(hud.image(b.gfx), 0, 0, n, b.fill@1, bx + b.off@0, by + b.off@1)
+    }
+}
+
+;; MenuActionBar::render: the trim, an empty slot where no power is set,
+;; the icon of the power, and the wipe of a slot disabled
+func hud.draw_bar () {
+    val b = hud.bar
+    fl.part(hud.image("images/menus/actionbar_trim.png"), 0, 0, b.w, b.h, b.x, b.y)
+    loop i in (0, 11) {
+        val p = b.slots@i
+        val s = hud.state@i
+        if p {
+            if !s {
+                fl.part(hud.image("images/menus/slot_empty.png"), 0, 0, hud.icon, hud.icon, p@0, p@1)
+            } else {
+                hud.draw_icon(s@0, p@0, p@1)
+                if !s@1 || (s@2 < 1) {
+                    val ch = if s@2 > 0 => math.floor(hud.icon * s@2) => hud.icon
+                    if ch > 0 {
+                        fl.part(hud.image("images/menus/disabled.png"), 0, 0, hud.icon, ch, p@0, p@1)
+                    }
+                }
+            }
+        }
+    }
+}
+
+func hud.draw (h) {
+    if os.getenv("FLARE_NOHUD") {
+        return nil
+    }
+    loop _, b in hud.stats {
+        hud.draw_stat(b)
+    }
+    hud.draw_bar()
+}
