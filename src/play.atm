@@ -374,6 +374,7 @@ task MapRun (path, pos, h) {
             if hp.currency > 0 {
                 set hp.currency = hp.currency - math.floor(fl.f32(fl.f32(hp.currency * 50) / 100))
             }
+            set hp.log_msg@+ = ["Lost 50% of " ++ loot.currency_name ++ ". ", false]
         }
         ;; MenuGameOver::logic: the button Continue (WidgetButton::checkClick)
         if hp.game_over {
@@ -444,8 +445,10 @@ task MapRun (path, pos, h) {
         }
         loot.logic(hp)
         npc.logic(npcs)
-        ;; checkTeleport: another map ends this one
+        ;; checkTeleport: another map ends this one; then checkLog: the
+        ;; messages of the hero to the log
         if w.teleport {
+            hud.log_check(hp)
             val tp = w.teleport
             set w.teleport = nil
             if tp.map {
@@ -453,6 +456,7 @@ task MapRun (path, pos, h) {
             }
             set hp.x, hp.y = fl.f32(tp.pos@0), fl.f32(tp.pos@1)
         }
+        hud.log_check(hp)
         set w.cleared = true
         loop _, t in ens {
             if t.pub.hp > 0 {
