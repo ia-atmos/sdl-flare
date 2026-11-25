@@ -332,7 +332,29 @@ func hud.logic (h) {
     val vw, _ = fl.view()
     val per = math.max(1, (vw - hud.fx_pos@0) // hud.icon)
     val ics = []
+    ;; the effects of the list of the original: those alive but the ones a
+    ;; request removes, then the requests (EffectManager::addEffect adds at
+    ;; once; the port at the next logic of the entity), with a full timer
+    val gone = []
+    loop _, t in h.fx_remove || [] {
+        set gone@t = true
+    }
+    loop _, r in h.fx_add || [] {
+        if !r.can_stack {
+            set gone@(r.id) = true
+        }
+    }
+    val list = []
     loop _, f in h.fx_icons || [] {
+        if !gone@(f.type) && !gone@(f.id) {
+            set list@+ = f
+        }
+    }
+    loop _, r in h.fx_add || [] {
+        set list@+ = [icon = r.icon, type = r.type, cur = r.dur, dur = r.dur,
+                      shield = if r.type == "shield" => [m = r.m, max = r.m] => nil]
+    }
+    loop _, f in list {
         if f.icon != -1 {
             val n = #ics
             val x = hud.fx_pos@0 + ((n % per) * hud.icon)
