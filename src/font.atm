@@ -4,6 +4,7 @@
 ;;      font.init()                 loads the styles (language "en") and colors
 ;;      font.text(id, s, x, y, justify, color)      a text in a style
 ;;      font.shadowed(id, s, x, y, justify, color)  with a black shadow first
+;;      font.label(id, s, x, y, justify, valign, color)  WidgetLabel
 ;;      font.width(id, s), font.height(id)
 ;;      font.color(name)            a color of font_colors.txt, as 0xRRGGBB
 ;;
@@ -11,6 +12,7 @@
 
 pin font = [
     LEFT = 0, RIGHT = 1, CENTER = 2,
+    TOP = 0, BOTTOM = 1,        ;; LabelInfo::VALIGN_* (CENTER as above)
     styles = [],        ;; id -> [img, blend, shadow=[x,y], height]
     colors = [],        ;; name -> 0xRRGGBB
     first = nil,        ;; the first style, the fallback
@@ -87,6 +89,28 @@ func font.shadowed (id, s, x, y, justify, color) {
     val st = font_style(id)
     fl.text(st.img, s, x + st.shadow@0, y + st.shadow@1, 0x000000, justify, st.blend)
     fl.text(st.img, s, x, y, color, justify, st.blend)
+}
+
+;; WidgetLabel: a text with its shadow, at x,y by its justify (font.LEFT,
+;; RIGHT, CENTER) and its valign (font.TOP, BOTTOM, CENTER)
+func font.label (id, s, x, y, justify, valign, color) {
+    if s == "" {
+        return nil
+    }
+    val st = font_style(id)
+    val w = fl.text_width(st.img, s)
+    val h = fl.label_height(st.img, s)
+    val bx = ifs {
+        justify == font.RIGHT => x - w
+        justify == font.CENTER => x - (w // 2)
+        else => x
+    }
+    val by = ifs {
+        valign == font.BOTTOM => y - h
+        valign == font.CENTER => y - (h // 2)
+        else => y
+    }
+    fl.label(st.img, s, bx, by, color, st.shadow@0, st.shadow@1, st.blend)
 }
 
 func font.width (id, s) {

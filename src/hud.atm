@@ -5,7 +5,7 @@
 ;;      hud.draw(h)     a frame of the menus over the map, for the hero `h`
 ;;
 ;; Done: the bars of life, mana, and experience (MenuStatBar), the action
-;; bar (MenuActionBar). Not drawn: tooltips and the
+;; bar (MenuActionBar), the enemy under the mouse (MenuEnemy). Not drawn: tooltips and the
 ;; labels of hotkeys (hidden by engine/widget_settings.txt).
 
 pin hud = [
@@ -14,6 +14,8 @@ pin hud = [
     bar = nil,          ;; the action bar: [x, y, w, h, slots]
     state = [],         ;; the slots of the action bar, by hud.logic
     stats = [],         ;; the bars: hp, mp, xp (MenuStatBar), by order
+    emenu = nil,        ;; MenuEnemy: its menu, and its timer
+    enemy = nil,        ;; the enemy shown, set :out (nil when it ends)
 ]
 
 ;; Utils::alignToScreenEdge of a rect of a menu
@@ -91,6 +93,43 @@ func hud.init () {
     }
     set hud.bar = [x = m.x, y = m.y, w = m.w, h = m.h, slots = slots]
     set hud.stats = [hud.statbar("hp"), hud.statbar("mp"), hud.statbar("xp")]
+    ;; MenuEnemy: menus/enemy.txt, and its timeout (10 s by default)
+    val em = hud.menu("menus/enemy.txt")
+    val e = [x = em.x, y = em.y, pos = [0, 0, em.w, em.h], fill = nil, off = [0, 0],
+             text = nil, gfx = nil, bg = nil, timeout = timer(60 * 10)]
+    loop _, kv in em.keys {
+        val k, v = kv@0, kv@1
+        val l = parse.list(v)
+        match k {
+            "bar_pos" => { set e.pos = [parse.int(l@0), parse.int(l@1), parse.int(l@2), parse.int(l@3)] }
+            "bar_fill_size" => { set e.fill = [parse.int(l@0), parse.int(l@1)] }
+            "bar_fill_offset" => { set e.off = [parse.int(l@0), parse.int(l@1)] }
+            "text_pos" => { set e.text = hud.label_info(l) }
+            "bar_gfx" => { set e.gfx = v }
+            "background" => { set e.bg = v }
+            "timeout" => { set e.timeout = timer(parse.duration(v)) }
+        }
+    }
+    set e.fill = e.fill || [e.pos@2, e.pos@3]
+    set hud.emenu = e
+}
+
+;; Parse::popLabelInfo: x, y, justify, valign, style
+func hud.label_info (l) {
+    val j = l@2 || ""
+    val v = l@3 || ""
+    [x = parse.int(l@0), y = parse.int(l@1),
+     justify = if j == "center" => font.CENTER => (if j == "right" => font.RIGHT => font.LEFT),
+     valign = if v == "center" => font.CENTER => (if v == "bottom" => font.BOTTOM => font.TOP),
+     style = if (l@4 || "") != "" => l@4 => "font_regular"]
+}
+
+;; GameStatePlay::checkEnemyFocus: the enemy shown, and its time again
+func hud.enemy_focus (e) {
+    if e && !e.suppress_hp {
+        set :out hud.enemy = e
+        timer_begin(hud.emenu.timeout)
+    }
 }
 
 ;; MenuStatBar: menus/<k>.txt
@@ -146,6 +185,15 @@ func hud.logic (h) {
         }
     }
     set hud.state = st
+    ;; MenuEnemy::logic: hidden after its time, or with its corpse gone
+    timer_tick(hud.emenu.timeout)
+    if timer_end(hud.emenu.timeout) {
+        set hud.enemy = nil
+    }
+    val en = hud.enemy
+    if en && en.corpse && timer_end(en.corpse_timer) {
+        set hud.enemy = nil
+    }
     ;; MenuStatBar::update
     val hb, mb, xb = hud.stats@0, hud.stats@1, hud.stats@2
     set hb.cur, hb.max = h.hp, h.hp_max
@@ -196,6 +244,50 @@ func hud.draw_bar () {
     }
 }
 
+;; MenuEnemy::render: the background, the fill of its life, its name and
+;; level, and its life (or Dead, or Destroyed)
+func hud.draw_enemy () {
+    val en = hud.enemy
+    val m = hud.emenu
+    if !en {
+        return nil
+    }
+    val dx, dy = m.x + m.pos@0, m.y + m.pos@1
+    val len = if en.hp_max == 0 {
+        0
+    } else {
+        val n = math.floor(fl.f32(fl.f32(en.hp * m.fill@0) / en.hp_max))
+        if (n == 0) && (en.hp > 0) => 1 => n
+    }
+    if m.bg {
+        fl.part(hud.image(m.bg), 0, 0, m.pos@2, m.pos@3, dx, dy)
+    }
+    val fx, fy = dx + m.off@0, dy + m.off@1
+    if m.gfx && (len > 0) {
+        fl.part(hud.image(m.gfx), 0, 0, len, m.fill@1, fx, fy)
+    }
+    val color = font.color("menu_normal")
+    val t = m.text
+    val name = en.name ++ " level " ++ en.level
+    if t {
+        font.label(t.style, name, m.x + t.x, m.y + t.y, t.justify, t.valign, color)
+    } else {
+        font.label("font_regular", name, dx + (m.pos@2 // 2), dy, font.CENTER, font.BOTTOM, color)
+    }
+    val life = ifs {
+        en.hp > 0 => string.format("%.0f", en.hp) ++ "/" ++ string.format("%.0f", en.hp_max)
+        en.lifeform => "Dead"
+        else => "Destroyed"
+    }
+    ;; label_stats keeps the color of a WidgetLabel: widget_normal
+    val wc = font.color("widget_normal")
+    if m.gfx {
+        font.label("font_regular", life, fx + (m.fill@0 // 2), fy + (m.fill@1 // 2), font.CENTER, font.CENTER, wc)
+    } else {
+        font.label("font_regular", life, dx + (m.pos@2 // 2), dy + (m.pos@3 // 2), font.CENTER, font.CENTER, wc)
+    }
+}
+
 func hud.draw (h) {
     if os.getenv("FLARE_NOHUD") {
         return nil
@@ -204,4 +296,5 @@ func hud.draw (h) {
         hud.draw_stat(b)
     }
     hud.draw_bar()
+    hud.draw_enemy()
 }
