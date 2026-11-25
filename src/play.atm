@@ -403,6 +403,11 @@ task MapRun (path, pos, h) {
             emit @t :enemy.logic [hero = hp]
         }
         hazards_logic(ens, hp)
+        ;; StatBlock::takeDamage: the experience of the enemies that died
+        ;; this frame (no xp_scaling in the data of the slice)
+        loop _, en in loot.dropping {
+            hero.reward_xp(hp, en.xp)
+        }
         loot.logic(hp)
         npc.logic(npcs)
         ;; checkTeleport: another map ends this one

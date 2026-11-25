@@ -552,7 +552,7 @@ func ai_act (e, next) {
 task Enemy (st, me) {
     set pub = [
         name = st.name, x = fl.f32(me.x), y = fl.f32(me.y), dir = me.dir,
-        hp = st.hp, hp_max = st.hp, mp = st.mp, base = st.base, speed = st.speed,
+        hp = st.hp, hp_max = st.hp, mp = st.mp, base = st.base, speed = st.speed, xp = st.xp,
         state = if me.state == "spawn" => STATE.SPAWN => STATE.STANCE, movement = st.movement,
         melee_range = st.melee_range, threat_range = st.threat_range,
         threat_range_far = st.threat_range_far, flee_range = st.flee_range,
