@@ -239,6 +239,9 @@ func loot.pickup (hero) {
     }
     if m != nil {
         val g = loot.ground@m
+        if fl.dist(hero.x, hero.y, g.x, g.y) < 3 {
+            cursor.set("interact")
+        }
         if (fl.dist(hero.x, hero.y, g.x, g.y) < 3) && fl.pressed(Input.MAIN1) {
             fl.lock(Input.MAIN1, true)
             val id, q = g.id, g.q

@@ -340,6 +340,7 @@ func event.hotspots (evs, w, h) {
                 val cx = fl.f32(ev.hotspot@0 + fl.f32(ev.hotspot@2 / 2))
                 val cy = fl.f32(ev.hotspot@1 + fl.f32(ev.hotspot@3 / 2))
                 if fl.dist(h.x, h.y, cx, cy) < 3 {
+                    cursor.set("interact")
                     if !fl.pressed(Input.MAIN1) || h.using_main1 {
                         return nil
                     }

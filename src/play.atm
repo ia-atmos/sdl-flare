@@ -102,6 +102,9 @@ func play.focus (h, ens) {
                 }
             }
         }
+        if enemy {
+            cursor.set("attack")
+        }
     }
     enemy
 }
@@ -334,6 +337,9 @@ task MapRun (path, pos, h) {
     }
 
     loop on :frame {
+        cursor.reset()
+        cursor.low_hp(hp)
+        hud.logic(hp)
         ;; MenuInventory::logic: the death penalty, half of the currency
         if hp.death_penalty {
             set hp.death_penalty = false
@@ -463,5 +469,7 @@ task Play (path, pos, class) {
         }
         fl.map_render()
         fl.ren_clear()          ;; the maps add theirs before the next draw
+        hud.draw(h.pub)
+        cursor.draw()
     }
 }
