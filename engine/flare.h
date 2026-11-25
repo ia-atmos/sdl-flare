@@ -137,9 +137,8 @@ static int fl_img_find (const char* path, int raw) {
 }
 
 // Adds an image of the environment (or nil, a failed load), which the
-// caller keeps alive: its index, or -1. It is converted to ARGB8888 now,
-// as the environment does at its first draw (sdl_blit with no
-// destination), unless raw.
+// caller keeps alive: its index, or -1. sdl_sfc gives it converted to
+// ARGB8888, unless raw.
 static int fl_img_add (AVal v, const char* path, int raw) {
     if (FL_IMGS_N == FL_IMGS_MAX) {
         return -1;
@@ -152,9 +151,6 @@ static int fl_img_add (AVal v, const char* path, int raw) {
     if (v.type == A_NIL) {
         fprintf(stderr, "flare : image : %s : %s\n", path, IMG_GetError());
     } else {
-        if (!raw) {
-            sdl_blit(v, NULL, NULL, 255);
-        }
         img->tex = sdl_sfc(v);
         img->w = img->tex->w;
         img->h = img->tex->h;

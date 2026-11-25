@@ -16,9 +16,8 @@ include "../env/sdl.atm"
 sdl.window [title="Flare", width=1280, height=720, logical=[1706, 960], software=true]
 `fl_start();`
 
-;; the frames done, the input of the original (InputState), and the mouse
-;; of the window in the render (InputState::scaleMouse; the scripted input
-;; is in the render already)
+;; the frames done, and the input of the original (InputState); the mouse
+;; is in the render, scaled by SDL as in the original (its logical size)
 spawn {
     loop e on :frame {
         val n = e.n
@@ -28,16 +27,6 @@ spawn {
 spawn {
     loop on :draw {
         `FL_FRAME = (unsigned long)SDL_FRAME;`
-    }
-}
-func fl_mouse_xy (e) {
-    if sdl.testing() || `:boolean getenv("SDL_ATM_FRAMES") != NULL` {
-        return e.x, e.y
-    } else {
-        val s = `:number.float (double)((float)FL_H / 720.0f)`
-        val x, y = e.x, e.y
-        return `:number (int)((float)a_dbl($x) * (float)a_dbl($s))`,
-               `:number (int)((float)a_dbl($y) * (float)a_dbl($s))`
     }
 }
 spawn {
@@ -54,20 +43,20 @@ spawn {
 }
 spawn {
     loop e on :mouse.motion {
-        val x, y = fl_mouse_xy(e)
+        val x, y = e.x, e.y
         `FL_MOUSE_X = fl_int($x); FL_MOUSE_Y = fl_int($y);`
     }
 }
 spawn {
     loop e on :mouse.button.dn {
-        val x, y = fl_mouse_xy(e)
+        val x, y = e.x, e.y
         val b = e.button
         `fl_input_mouse(fl_int($x), fl_int($y), fl_int($b), 1);`
     }
 }
 spawn {
     loop e on :mouse.button.up {
-        val x, y = fl_mouse_xy(e)
+        val x, y = e.x, e.y
         val b = e.button
         `fl_input_mouse(fl_int($x), fl_int($y), fl_int($b), 0);`
     }
