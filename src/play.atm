@@ -109,6 +109,29 @@ func play.focus (h, ens) {
     enemy
 }
 
+;; EntityManager::entityFocus, not only the alive: the entity under the
+;; mouse nearest to its center, but corpses gone
+func play.focus_dead (ens) {
+    val mx, my = fl.mouse()
+    var best = nil
+    var enemy = nil
+    loop _, t in ens {
+        val e = t.pub
+        val gone = e.corpse && timer_end(e.corpse_timer)
+        if !gone {
+            pin r = play.bounds(e)
+            if (mx >= r@0) && (my >= r@1) && (mx < (r@0 + r@2)) && (my < (r@1 + r@3)) {
+                val d = fl.dist(mx, my, fl.f32(r@0 + (r@2 / 2)), fl.f32(r@1 + (r@3 / 2)))
+                if (best == nil) || (d < best) {
+                    set best = d
+                    set enemy = e
+                }
+            }
+        }
+    }
+    enemy
+}
+
 ;; MenuActionBar::checkAction, for the main buttons of the mouse: the power
 ;; of the slot, aimed at the mouse (aim_assist of misc.txt: 96)
 func play.actions (h) {
@@ -390,6 +413,12 @@ task MapRun (path, pos, h) {
         ;; the hero, outer to the map, refers to the enemy under the mouse
         ;; while this map lives (the place returns to nil when it ends)
         set :out hp.cursor_enemy = play.focus(hp, ens)
+        if hp.cursor_enemy {
+            hud.enemy_focus(hp.cursor_enemy)
+        } else {
+            ;; with the mouse, a dead enemy under it if no alive one
+            hud.enemy_focus(play.focus_dead(ens))
+        }
         play.actions(hp)
         emit @h :hero.logic
         if hp.respawn_request {

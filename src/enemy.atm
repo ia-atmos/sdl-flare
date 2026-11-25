@@ -202,7 +202,7 @@ func enemy.stats (path) {
         powers = [], loot = [], loot_count = [0, 0],
         set_by_file = [],       ;; the timers set by the file (setDuration: full)
         sfx_attack = [], sfx_hit = [], sfx_die = [], sfx_critdie = [], sfx_block = [],
-        corpse_has_collision = false, suppress_hp = false, humanoid = false,
+        corpse_has_collision = false, suppress_hp = false, humanoid = false, lifeform = true,
     ]
     val st = enemy.protos@path
     loop _, s in ini.load(path) || [] {
@@ -260,6 +260,7 @@ func enemy.stats (path) {
                 "gfx" => { set st.animations = v }
                 "humanoid" => { set st.humanoid = parse.bool(v) }
                 "suppress_hp" => { set st.suppress_hp = parse.bool(v) }
+                "lifeform" => { set st.lifeform = parse.bool(v) }
                 "corpse_has_collision" => { set st.corpse_has_collision = parse.bool(v) }
                 "power" => {
                     val id = parse.int(l@1)

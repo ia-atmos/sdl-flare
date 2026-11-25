@@ -272,6 +272,45 @@ static void fl_font_draw (int fi, const char* s, int x, int y, int justify, int 
     SDL_FreeSurface(sfc);
 }
 
+// A label, as WidgetLabel::recacheTextSprite and render: the text in an
+// image of its size (the width of the text, the height of the text or of
+// the line, if more), cleared (SDLSoftwareRenderDevice::createImage),
+// with its shadow in black at an offset and then the text, each blitted
+// twice (FontEngine::renderShadowed, SDLFontEngine::renderInternal); then
+// the image at x,y.
+static void fl_label (int fi, const char* s, int x, int y, int color, int sx, int sy, int blend) {
+    if (fi < 0 || fi >= FL_FONTS_N || *s == '\0') {
+        return;
+    }
+    int w = 0, h = 0;
+    TTF_SizeUTF8(FL_FONTS[fi], s, &w, &h);
+    int lh = TTF_FontLineSkip(FL_FONTS[fi]);
+    if (lh > h) {
+        h = lh;
+    }
+    SDL_Surface* img = SDL_CreateRGBSurfaceWithFormat(0, w, h, 32, SDL_PIXELFORMAT_ARGB8888);
+    if (img == NULL) {
+        return;
+    }
+    for (int k=0; k<2; k++) {
+        SDL_Color c = (k == 0) ? (SDL_Color){ 0, 0, 0, 255 }
+                               : (SDL_Color){ (color>>16)&0xFF, (color>>8)&0xFF, color&0xFF, 255 };
+        SDL_Surface* t = blend ? TTF_RenderUTF8_Blended(FL_FONTS[fi], s, c)
+                               : TTF_RenderUTF8_Solid(FL_FONTS[fi], s, c);
+        if (t != NULL) {
+            for (int j=0; j<2; j++) {
+                SDL_Rect d = { (k == 0) ? sx : 0, (k == 0) ? sy : 0, t->w, t->h };
+                SDL_BlitSurface(t, NULL, img, &d);
+            }
+            SDL_FreeSurface(t);
+        }
+    }
+    SDL_Rect dst = { x, y, w, h };
+    SDL_SetSurfaceBlendMode(img, SDL_BLENDMODE_BLEND);
+    SDL_BlitSurface(img, NULL, FL_SCREEN, &dst);
+    SDL_FreeSurface(img);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // SOUNDS AND MUSIC
 ///////////////////////////////////////////////////////////////////////////////
