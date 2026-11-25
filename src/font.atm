@@ -4,7 +4,7 @@
 ;;      font.init()                 loads the styles (language "en") and colors
 ;;      font.text(id, s, x, y, justify, color)      a text in a style
 ;;      font.shadowed(id, s, x, y, justify, color)  with a black shadow first
-;;      font.label(id, s, x, y, justify, valign, color)  WidgetLabel
+;;      font.label(id, s, x, y, justify, valign, color [,alpha])  WidgetLabel
 ;;      font.width(id, s), font.height(id)
 ;;      font.color(name)            a color of font_colors.txt, as 0xRRGGBB
 ;;
@@ -93,7 +93,7 @@ func font.shadowed (id, s, x, y, justify, color) {
 
 ;; WidgetLabel: a text with its shadow, at x,y by its justify (font.LEFT,
 ;; RIGHT, CENTER) and its valign (font.TOP, BOTTOM, CENTER)
-func font.label (id, s, x, y, justify, valign, color) {
+func font.label (id, s, x, y, justify, valign, color, alpha) {
     if s == "" {
         return nil
     }
@@ -110,7 +110,7 @@ func font.label (id, s, x, y, justify, valign, color) {
         valign == font.CENTER => y - (h // 2)
         else => y
     }
-    fl.label(st.img, s, bx, by, color, st.shadow@0, st.shadow@1, st.blend)
+    fl.label(st.img, s, bx, by, color, st.shadow@0, st.shadow@1, st.blend, alpha)
 }
 
 func font.width (id, s) {
