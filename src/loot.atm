@@ -13,6 +13,7 @@ pin loot = [
     currency = 10,      ;; currency_id of engine/misc.txt
     ground = [],        ;; the stacks on the map: [id, q, x, y, cur, on_ground]
     autopickup_currency = false,    ;; of engine/loot.txt
+    currency_name = "Gold",         ;; of engine/loot.txt
     autopickup_range = 1.0,
     map = [],           ;; the loot of events, to drop in the next loot step
     unblock = [],       ;; the tiles blocked by drops of this loot step
@@ -87,6 +88,7 @@ func loot.init () {
                 "drop_radius" => { set loot.drop_radius = parse.int(kv@1) }
                 "autopickup_currency" => { set loot.autopickup_currency = parse.bool(kv@1) }
                 "autopickup_range" => { set loot.autopickup_range = parse.float(kv@1) }
+                "currency_name" => { set loot.currency_name = kv@1 }
             }
         }
     }

@@ -458,6 +458,7 @@ task HDead (h, turning) {
             ;; death penalty is raised (MenuInventory::logic), MAIN1 is
             ;; locked if pressed
             effect.clear(h, h.task)
+            set h.log_msg@+ = ["You are defeated.", false]
             timer_end_now(h.cooldown)
             loop _, t in h.casting {
                 set t.cur = 0
@@ -504,6 +505,7 @@ task Hero (st, pos) {
         cooldown = timer(parse.duration("66ms")), sfx_hit = hero.sfx.hit, cooldown_hit = nil,
         x = fl.f32(pos@0), y = fl.f32(pos@1), dir = 6,
         speed = st.speed, hp = st.hp, mp = st.mp, mp_max = st.mp, xp = 0, xp_bonus = 0.0, level = 1,
+        log_msg = [], prev_hp = 0.0,  ;; Avatar::log_msg: [text, unique]; Avatar::prev_hp
         state = STATE.STANCE,
         camera_lock = true,     ;; teleport_camera_lock, until the camera is near
         anims = anim.load("animations/hero.txt"),
@@ -548,6 +550,12 @@ task Hero (st, pos) {
             set h.hp = math.max(0.0, math.min(fl.f32(h.hp + regen), h.hp_max))
         }
         effect.damage(h)
+        ;; Avatar::logic: the alert of low life (isDroppedToLowHp, 20%)
+        val one = fl.f32(fl.f32(math.max(h.hp_max, 1)) / fl.f32(100.0))
+        if (fl.f32(h.hp / one) < 20) && (fl.f32(h.prev_hp / one) >= 20) {
+            set h.log_msg@+ = ["Your health is low!", false]
+        }
+        set h.prev_hp = h.hp
         if !h.stun {
             anim.advance(h.cur)
         }
