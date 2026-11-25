@@ -112,6 +112,19 @@ pin fl = [
         val a = if alpha == nil => 255 => alpha
         `fl_label(fl_int($f), fl_cstr($s), fl_int($x), fl_int($y), fl_int($color), fl_int($sx), fl_int($sy), fl_int($b), fl_int($a));`
     },
+    ;; fl.label_wrap(font, s, x, y, color, sx, sy, blend, width): a label
+    ;; wrapped to a width (see fl_label_wrap); fl.wrap_size: its size
+    label_wrap = func (f, s, x, y, color, sx, sy, blend, width) {
+        val b = if blend == false => 0 => 1
+        `fl_label_wrap(fl_int($f), fl_cstr($s), fl_int($x), fl_int($y), fl_int($color), fl_int($sx), fl_int($sy), fl_int($b), fl_int($width));`
+    },
+    wrap_size = func (f, s, width) {
+        `fl_wrap(fl_int($f), fl_cstr($s), fl_int($width));`
+        return `:number FL_WRAP_W`, `:number FL_WRAP_H`
+    },
+    line_height = func (f) {
+        `:number ((fl_int($f) >= 0 && fl_int($f) < FL_FONTS_N) ? TTF_FontLineSkip(FL_FONTS[fl_int($f)]) : 1)`
+    },
     ;; the height of a label: of the text, or of the line if more
     label_height = func (f, s) {
         `:number ({ int w=0, h=0; if (fl_int($f) >= 0 && fl_int($f) < FL_FONTS_N) { TTF_SizeUTF8(FL_FONTS[fl_int($f)], fl_cstr($s), &w, &h); int l = TTF_FontLineSkip(FL_FONTS[fl_int($f)]); if (l > h) h = l; } h; })`

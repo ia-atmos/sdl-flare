@@ -312,6 +312,134 @@ static void fl_label (int fi, const char* s, int x, int y, int color, int sx, in
     SDL_FreeSurface(img);
 }
 
+// The lines of a text wrapped to a width, as FontEngine::render renders
+// them (with their trailing spaces), and its size as calcSizeWrapped gives
+// it (no newlines in the text).
+#define FL_WRAP_MAX 64
+#define FL_WRAP_LEN 1024
+static char FL_WRAP[FL_WRAP_MAX][FL_WRAP_LEN];
+static int  FL_WRAP_N = 0, FL_WRAP_W = 0, FL_WRAP_H = 0;
+
+static int fl_wrap_width (TTF_Font* f, const char* s) {
+    int w = 0, h = 0;
+    if (*s) TTF_SizeUTF8(f, s, &w, &h);
+    return w;
+}
+
+static void fl_wrap_line (const char* s) {
+    if (FL_WRAP_N < FL_WRAP_MAX) {
+        snprintf(FL_WRAP[FL_WRAP_N++], FL_WRAP_LEN, "%s", s);
+    }
+}
+
+// FontEngine::popTokenByWidth: `word` keeps what fits, `rest` the rest
+// (or `word` itself if nothing fits)
+static void fl_wrap_pop (TTF_Font* f, char* word, char* rest, int width) {
+    size_t n = strlen(word), keep = 0;
+    char tmp[FL_WRAP_LEN];
+    for (size_t i=0; i<=n; i++) {
+        if (i < n && (word[i] & 0xc0) == 0x80) continue;
+        memcpy(tmp, word, i); tmp[i] = '\0';
+        if (fl_wrap_width(f, tmp) > width) break;
+        keep = i;
+    }
+    if (keep > 0) {
+        strcpy(rest, word + keep);
+        word[keep] = '\0';
+    } else {
+        strcpy(rest, word);
+    }
+}
+
+static void fl_wrap (int fi, const char* text, int width) {
+    FL_WRAP_N = FL_WRAP_W = FL_WRAP_H = 0;
+    if (fi < 0 || fi >= FL_FONTS_N) return;
+    TTF_Font* f = FL_FONTS[fi];
+    int lh = TTF_FontLineSkip(f);
+    char full[FL_WRAP_LEN], word[FL_WRAP_LEN], rest[FL_WRAP_LEN];
+    char builder[FL_WRAP_LEN] = "", prev[FL_WRAP_LEN] = "";
+    snprintf(full, sizeof(full), "%s ", text);
+    size_t cur = 0, len = strlen(full);
+    while (1) {
+        char* sp = strchr(full + cur, ' ');
+        if (sp == NULL) break;                      // cursor = npos
+        size_t old = cur;
+        size_t wl = (size_t)(sp - (full + cur));
+        memcpy(word, full + cur, wl); word[wl] = '\0';
+        cur = (size_t)(sp - full) + 1;
+        strncat(builder, word, FL_WRAP_LEN - strlen(builder) - 1);
+        if (fl_wrap_width(f, builder) > width) {
+            if (prev[0] != '\0') {
+                fl_wrap_line(prev);
+                FL_WRAP_H += lh;
+                int pw = fl_wrap_width(f, prev);
+                if (pw > FL_WRAP_W) FL_WRAP_W = pw;
+            }
+            builder[0] = '\0';
+            fl_wrap_pop(f, word, rest, width);
+            if (rest[0] != '\0') {
+                while (rest[0] != '\0') {
+                    fl_wrap_line(word);
+                    int ww = fl_wrap_width(f, word);
+                    if (ww > FL_WRAP_W) FL_WRAP_W = ww;
+                    FL_WRAP_H += lh;
+                    strcpy(word, rest);
+                    fl_wrap_pop(f, word, rest, width);
+                    if (strcmp(rest, word) == 0) break;
+                }
+            }
+            snprintf(builder, FL_WRAP_LEN, "%s ", word);
+            strcpy(prev, builder);
+        } else {
+            strncat(builder, " ", FL_WRAP_LEN - strlen(builder) - 1);
+            strcpy(prev, builder);
+        }
+        if (cur >= len) break;                      // no more separators
+        if (cur == old) break;
+    }
+    fl_wrap_line(builder);
+    // Parse::trim of the last line, for the size
+    char trim[FL_WRAP_LEN];
+    const char* a = builder;
+    while (*a == ' ' || *a == '\t') a++;
+    snprintf(trim, sizeof(trim), "%s", a);
+    size_t tl = strlen(trim);
+    while (tl > 0 && (trim[tl-1] == ' ' || trim[tl-1] == '\t')) trim[--tl] = '\0';
+    if (trim[0] != '\0') FL_WRAP_H += lh;
+    int tw = fl_wrap_width(f, trim);
+    if (tw > FL_WRAP_W) FL_WRAP_W = tw;
+    if (strcmp(text, " ") == 0) FL_WRAP_H += lh;
+}
+
+// A wrapped label: as fl_label, the lines in an image of the size of
+// calcSizeWrapped, a line height apart (MenuHUDLog::add).
+static void fl_label_wrap (int fi, const char* s, int x, int y, int color, int sx, int sy, int blend, int width) {
+    fl_wrap(fi, s, width);
+    if (FL_WRAP_W <= 0 || FL_WRAP_H <= 0) return;
+    int lh = TTF_FontLineSkip(FL_FONTS[fi]);
+    SDL_Surface* img = SDL_CreateRGBSurfaceWithFormat(0, FL_WRAP_W, FL_WRAP_H, 32, SDL_PIXELFORMAT_ARGB8888);
+    if (img == NULL) return;
+    for (int k=0; k<2; k++) {
+        SDL_Color c = (k == 0) ? (SDL_Color){ 0, 0, 0, 255 }
+                               : (SDL_Color){ (color>>16)&0xFF, (color>>8)&0xFF, color&0xFF, 255 };
+        for (int i=0; i<FL_WRAP_N; i++) {
+            if (FL_WRAP[i][0] == '\0') continue;
+            SDL_Surface* t = blend ? TTF_RenderUTF8_Blended(FL_FONTS[fi], FL_WRAP[i], c)
+                                   : TTF_RenderUTF8_Solid(FL_FONTS[fi], FL_WRAP[i], c);
+            if (t == NULL) continue;
+            for (int j=0; j<2; j++) {
+                SDL_Rect d = { (k == 0) ? sx : 0, i * lh + ((k == 0) ? sy : 0), t->w, t->h };
+                SDL_BlitSurface(t, NULL, img, &d);
+            }
+            SDL_FreeSurface(t);
+        }
+    }
+    SDL_Rect dst = { x, y, FL_WRAP_W, FL_WRAP_H };
+    SDL_SetSurfaceBlendMode(img, SDL_BLENDMODE_BLEND);
+    SDL_BlitSurface(img, NULL, FL_SCREEN, &dst);
+    SDL_FreeSurface(img);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // SOUNDS AND MUSIC
 ///////////////////////////////////////////////////////////////////////////////

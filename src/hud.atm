@@ -8,7 +8,8 @@
 ;; bar (MenuActionBar), the enemy under the mouse (MenuEnemy), the title
 ;; of the region (MenuRegionTitle), the minimap (MenuMiniMap, its zoom of
 ;; 1x: the click that turns it to 2x is not ported), the effects of the
-;; hero (MenuActiveEffects; no effect of the slice groups its stacks). Not drawn: tooltips and the
+;; hero (MenuActiveEffects; no effect of the slice groups its stacks), the
+;; log of messages (MenuHUDLog; its overlay over open menus is not ported). Not drawn: tooltips and the
 ;; labels of hotkeys (hidden by engine/widget_settings.txt).
 
 pin hud = [
@@ -28,6 +29,8 @@ pin hud = [
     events = nil,       ;; the events of the map, set :out by MapRun
     effects = [],       ;; MenuActiveEffects: [icon, x, y, overlay y], by hud.logic
     fx_pos = [8, 80],   ;; its window
+    log = [],           ;; MenuHUDLog: [text, age] of each message
+    log_area = nil,     ;; its window [x, y, w, h], and its spacing
 ]
 
 ;; Utils::alignToScreenEdge of a rect of a menu
@@ -168,6 +171,75 @@ func hud.init () {
     set hud.mini = mi
     val fm = hud.menu("menus/activeeffects.txt")
     set hud.fx_pos = [fm.x, fm.y]
+    ;; MenuHUDLog: menus/hudlog.txt; the spacing of paragraphs is half a
+    ;; line of font_regular
+    val lm = hud.menu("menus/hudlog.txt")
+    set hud.log_area = [x = lm.x, y = lm.y, w = lm.w, h = lm.h,
+                        ps = fl.line_height(font.styles@("font_regular").img) // 2]
+}
+
+;; MenuHUDLog::add: a new message (or the same one again, unless unique,
+;; for longer), on the screen 5 s and 0.1 s per byte, no less than the one
+;; before
+func hud.log_add (s, unique) {
+    val n = #hud.log
+    val age = (60 * 5) + (#s * 6)
+    if (n == 0) || (hud.log@(n - 1)@0 != s) || unique {
+        set hud.log@+ = [s, age]
+    } else {
+        set hud.log@(n - 1)@1 = age
+    }
+    val m = #hud.log
+    if (m > 1) && (hud.log@(m - 1)@1 < hud.log@(m - 2)@1) {
+        set hud.log@(m - 1)@1 = hud.log@(m - 2)@1
+    }
+}
+
+;; GameStatePlay::checkLog: cleared at a respawn, then the messages of the
+;; hero
+func hud.log_check (h) {
+    if h.respawn {
+        set hud.log = []
+    }
+    loop _, m in h.log_msg {
+        hud.log_add(m@0, m@1)
+    }
+    set h.log_msg = []
+}
+
+;; MenuHUDLog::logic: each message ages; one aged out is removed (and the
+;; one after it waits for the next frame, as the loop of the original)
+func hud.log_logic () {
+    var i = 0
+    loop {
+        while i < #hud.log
+        val m = hud.log@i
+        if m@1 > 0 {
+            set m@1 = m@1 - 1
+        } else {
+            vector.remove(hud.log, i)
+        }
+        set i = i + 1
+    }
+}
+
+;; MenuHUDLog::render: from the bottom of its window, the newest first,
+;; while they fit
+func hud.draw_log () {
+    val a = hud.log_area
+    val f = font.styles@("font_regular")
+    val x = a.x + a.ps
+    var y = a.y + a.h
+    var i = #hud.log
+    loop {
+        while i > 0
+        set i = i - 1
+        val m = hud.log@i
+        until !((m@1 > 0) && (y > a.y))
+        val _, mh = fl.wrap_size(f.img, m@0, a.w - (a.ps * 2))
+        set y = y - (mh + a.ps)
+        fl.label_wrap(f.img, m@0, x, y, font.color("menu_normal"), f.shadow@0, f.shadow@1, f.blend, a.w - (a.ps * 2))
+    }
 }
 
 func hud.rgb (l) {
@@ -255,6 +327,7 @@ func hud.logic (h) {
         set hud.enemy = nil
     }
     hud.region_logic()
+    hud.log_logic()
     ;; MenuActiveEffects::logic: an icon per effect that has one, in rows
     val vw, _ = fl.view()
     val per = math.max(1, (vw - hud.fx_pos@0) // hud.icon)
@@ -534,6 +607,7 @@ func hud.draw (h) {
         hud.draw_stat(b)
     }
     hud.draw_effects()
+    hud.draw_log()
     hud.draw_bar()
     hud.draw_enemy()
     hud.draw_region()
