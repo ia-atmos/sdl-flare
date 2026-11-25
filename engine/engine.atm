@@ -105,11 +105,12 @@ pin fl = [
         val b = if blend == false => 0 => 1
         `fl_font_draw(fl_int($f), fl_cstr($s), fl_int($x), fl_int($y), fl_int($j), fl_int($c), fl_int($b));`
     },
-    ;; fl.label(font, s, x, y, color, sx, sy, blend): a label with its shadow
-    ;; at sx,sy, its top left at x,y (see fl_label)
-    label = func (f, s, x, y, color, sx, sy, blend) {
+    ;; fl.label(font, s, x, y, color, sx, sy, blend, alpha): a label with its
+    ;; shadow at sx,sy, its top left at x,y (see fl_label)
+    label = func (f, s, x, y, color, sx, sy, blend, alpha) {
         val b = if blend == false => 0 => 1
-        `fl_label(fl_int($f), fl_cstr($s), fl_int($x), fl_int($y), fl_int($color), fl_int($sx), fl_int($sy), fl_int($b));`
+        val a = if alpha == nil => 255 => alpha
+        `fl_label(fl_int($f), fl_cstr($s), fl_int($x), fl_int($y), fl_int($color), fl_int($sx), fl_int($sy), fl_int($b), fl_int($a));`
     },
     ;; the height of a label: of the text, or of the line if more
     label_height = func (f, s) {

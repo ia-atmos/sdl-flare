@@ -266,6 +266,7 @@ task MapRun (path, pos, h) {
     val hp = h.pub
     fl.trace("map " ++ path)
     pin m = map.load(path)
+    set hud.map_title = m.title
     set play.next_id = 1
     val p = pos || m.hero
     set hp.x, hp.y = fl.f32(p@0), fl.f32(p@1)

@@ -277,8 +277,8 @@ static void fl_font_draw (int fi, const char* s, int x, int y, int justify, int 
 // the line, if more), cleared (SDLSoftwareRenderDevice::createImage),
 // with its shadow in black at an offset and then the text, each blitted
 // twice (FontEngine::renderShadowed, SDLFontEngine::renderInternal); then
-// the image at x,y.
-static void fl_label (int fi, const char* s, int x, int y, int color, int sx, int sy, int blend) {
+// the image at x,y, with an alpha (WidgetLabel::setAlpha).
+static void fl_label (int fi, const char* s, int x, int y, int color, int sx, int sy, int blend, int alpha) {
     if (fi < 0 || fi >= FL_FONTS_N || *s == '\0') {
         return;
     }
@@ -307,6 +307,7 @@ static void fl_label (int fi, const char* s, int x, int y, int color, int sx, in
     }
     SDL_Rect dst = { x, y, w, h };
     SDL_SetSurfaceBlendMode(img, SDL_BLENDMODE_BLEND);
+    SDL_SetSurfaceAlphaMod(img, (Uint8)alpha);
     SDL_BlitSurface(img, NULL, FL_SCREEN, &dst);
     SDL_FreeSurface(img);
 }

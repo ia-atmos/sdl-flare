@@ -5,7 +5,8 @@
 ;;      hud.draw(h)     a frame of the menus over the map, for the hero `h`
 ;;
 ;; Done: the bars of life, mana, and experience (MenuStatBar), the action
-;; bar (MenuActionBar), the enemy under the mouse (MenuEnemy). Not drawn: tooltips and the
+;; bar (MenuActionBar), the enemy under the mouse (MenuEnemy), the title
+;; of the region (MenuRegionTitle). Not drawn: tooltips and the
 ;; labels of hotkeys (hidden by engine/widget_settings.txt).
 
 pin hud = [
@@ -16,6 +17,8 @@ pin hud = [
     stats = [],         ;; the bars: hp, mp, xp (MenuStatBar), by order
     emenu = nil,        ;; MenuEnemy: its menu, and its timer
     enemy = nil,        ;; the enemy shown, set :out (nil when it ends)
+    region = nil,       ;; MenuRegionTitle: its label, title, alpha, timers
+    map_title = "",     ;; the title of the map (MapRenderer::title)
 ]
 
 ;; Utils::alignToScreenEdge of a rect of a menu
@@ -112,6 +115,21 @@ func hud.init () {
     }
     set e.fill = e.fill || [e.pos@2, e.pos@3]
     set hud.emenu = e
+    ;; MenuRegionTitle: menus/region_title.txt
+    val rm = hud.menu("menus/region_title.txt")
+    val r = [x = rm.x, y = rm.y, label = hud.label_info(["0", "0", "center", "top", "font_region_title"]),
+             title = "", alpha = 0, visible = false,
+             hold = timer(60 * 3), fin = timer(60), fout = timer(60)]
+    loop _, kv in rm.keys {
+        val k, v = kv@0, kv@1
+        match k {
+            "label" => { set r.label = hud.label_info(parse.list(v)) }
+            "hold_duration" => { set r.hold = timer(parse.duration(v)) }
+            "fade_in_duration" => { set r.fin = timer(parse.duration(v)) }
+            "fade_out_duration" => { set r.fout = timer(parse.duration(v)) }
+        }
+    }
+    set hud.region = r
 }
 
 ;; Parse::popLabelInfo: x, y, justify, valign, style
@@ -194,6 +212,7 @@ func hud.logic (h) {
     if en && en.corpse && timer_end(en.corpse_timer) {
         set hud.enemy = nil
     }
+    hud.region_logic()
     ;; MenuStatBar::update
     val hb, mb, xb = hud.stats@0, hud.stats@1, hud.stats@2
     set hb.cur, hb.max = h.hp, h.hp_max
@@ -241,6 +260,55 @@ func hud.draw_bar () {
                 }
             }
         }
+    }
+}
+
+;; MenuRegionTitle::logic: the fade in, the hold, the fade out
+func hud.region_logic () {
+    val r = hud.region
+    if !r.visible {
+        return nil
+    }
+    if timer_end(r.hold) && timer_end(r.fout) {
+        set r.visible = false
+    } else {
+        if (r.hold.cur == r.hold.dur) && !timer_end(r.fin) {
+            val t = fl.f32(fl.f32(r.fin.cur) / fl.f32(r.fin.dur))
+            set r.alpha = math.floor(fl.f32(255 * fl.f32(1 - t)))
+            timer_tick(r.fin)
+        }
+        if !timer_end(r.hold) && timer_end(r.fin) {
+            set r.alpha = 255
+            timer_tick(r.hold)
+        }
+        if timer_end(r.hold) && !timer_end(r.fout) {
+            val t = fl.f32(fl.f32(r.fout.cur) / fl.f32(r.fout.dur))
+            set r.alpha = math.floor(fl.f32(255 * t))
+            timer_tick(r.fout)
+        }
+    }
+}
+
+;; MenuRegionTitle::setTitle, from GameStatePlay::render: a new title
+;; shows again from its fade in
+func hud.region_title (t) {
+    val r = hud.region
+    if t != r.title {
+        set r.title = t
+        set r.alpha = 0
+        timer_begin(r.hold)
+        timer_begin(r.fin)
+        timer_begin(r.fout)
+        set r.visible = true
+    }
+}
+
+;; MenuRegionTitle::render: its label (its background has no size)
+func hud.draw_region () {
+    val r = hud.region
+    if r.visible {
+        val l = r.label
+        font.label(l.style, r.title, r.x + l.x, r.y + l.y, l.justify, l.valign, font.color("menu_normal"), r.alpha)
     }
 }
 
@@ -292,9 +360,11 @@ func hud.draw (h) {
     if os.getenv("FLARE_NOHUD") {
         return nil
     }
+    hud.region_title(hud.map_title)
     loop _, b in hud.stats {
         hud.draw_stat(b)
     }
     hud.draw_bar()
     hud.draw_enemy()
+    hud.draw_region()
 }
