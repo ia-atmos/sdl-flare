@@ -138,6 +138,23 @@ pin fl = [
         `fl_music_stop();`
     },
 
+    ;; the minimap: see `engine/minimap.h`
+    map_size = func () {
+        return `:number FL_MAP_W`, `:number FL_MAP_H`
+    },
+    mm_prerender = func (zoom, w, h, wall, obst) {
+        `fl_mm_prerender(fl_int($zoom), fl_int($w), fl_int($h), (int64_t)a_dbl($wall), (int64_t)a_dbl($obst));`
+    },
+    mm_clear = func () {
+        `fl_mm_clear();`
+    },
+    mm_entity = func (x, y, ox, oy, c) {
+        `fl_mm_entity(fl_int($x), fl_int($y), fl_int($ox), fl_int($oy), (int64_t)a_dbl($c));`
+    },
+    mm_draw = func (cx, cy, w, h, ax, ay) {
+        `fl_mm_draw(fl_int($cx), fl_int($cy), fl_int($w), fl_int($h), fl_int($ax), fl_int($ay));`
+    },
+
     ;; the map: see `engine/map.h`
     tset_reset = func () {
         `fl_tset_reset();`
