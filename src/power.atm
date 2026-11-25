@@ -22,7 +22,7 @@ func power_new (id) {
         requires_los = false, requires_los_default = true, requires_targeting = false,
         requires_empty_target = false, directional = false, aim_assist = false,
         on_floor = false, complete_animation = false, use_hazard = false,
-        no_attack = false, multitarget = false, buff = false, buff_teleport = false,
+        no_attack = false, ignore_zero_damage = false, multitarget = false, buff = false, buff_teleport = false,
         source_type = nil, count = 1, cooldown = 0, lifespan = 0,
         starting_pos = "source", delay = 0, target_neighbor = 0,
         requires_mp = 0, speed = 0.0, attack_speed = 100.0, radius = 0.0,
@@ -119,6 +119,7 @@ func power.init () {
                     set p.requires_los_default = false
                 }
                 k == "no_attack" => { set p.no_attack = parse.bool(v) }
+                k == "ignore_zero_damage" => { set p.ignore_zero_damage = parse.bool(v) }
                 k == "count" => { set p.count = parse.int(v) }
                 k == "visual_random" => { set p.visual_random = parse.int(v) }
                 k == "visual_option" => { set p.visual_option = parse.int(v) }
