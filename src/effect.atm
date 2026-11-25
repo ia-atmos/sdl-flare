@@ -27,6 +27,8 @@ func effect.init () {
                 "can_stack" => { if d { set d.can_stack = parse.bool(kv@1) } }
                 "animation" => { if d { set d.animation = kv@1 } }
                 "render_above" => { if d { set d.render_above = parse.bool(kv@1) } }
+                "icon" => { if d { set d.icon = parse.int(kv@1) } }
+                "name" => { if d { set d.name = kv@1 } }
             }
         }
     }
@@ -54,7 +56,8 @@ func effect.add (t, id, d, m) {
         return false
     }
     set t.fx_add@+ = [id = id, type = def.type, dur = d, m = m, can_stack = def.can_stack,
-                      animation = def.animation, above = def.render_above || false]
+                      animation = def.animation, above = def.render_above || false,
+                      icon = if def.icon == nil => -1 => def.icon, name = def.name || ""]
     true
 }
 
@@ -95,6 +98,21 @@ task Effect (e, fx) {
             vector.remove(e.shields, k)
         }
     }
+    ;; its icon, for MenuActiveEffects: its timer and its shield
+    set e.fx_icons = e.fx_icons || []
+    val ic = vector.insert(e.fx_icons, [icon = fx.icon || -1, name = fx.name || "", type = fx.type,
+                                        cur = fx.dur, dur = fx.dur, shield = sh])
+    defer {
+        var k = nil
+        loop i, x in e.fx_icons {
+            if x == ic {
+                set k = i
+            }
+        }
+        if k != nil {
+            vector.remove(e.fx_icons, k)
+        }
+    }
     spawn {
         loop on :fx.logic {
             if v && !anim_completed(v.cur) {
@@ -105,6 +123,7 @@ task Effect (e, fx) {
     ;; the status, with the timer at `cur`: damage over time on each whole
     ;; second of the timer (or at its begin, if shorter than a second)
     val func status (cur) {
+        set ic.cur = cur
         val timed = ((cur % 60) == 0) || ((fx.dur < 60) && (cur == fx.dur))
         match fx.type {
             "stun" => { set e.stun = true }
@@ -112,7 +131,7 @@ task Effect (e, fx) {
             "damage_percent" => { if timed { set e.dot_percent = e.dot_percent + fx.m } }
         }
     }
-    watching :fx.remove until (it@0 == fx.type) || (it@0 == fx.id) {
+    watching :fx.remove until (it@0 == true) || (it@0 == fx.type) || (it@0 == fx.id) {
         if fx.dur == 0 {
             loop on :fx.logic {
                 status(0)
@@ -150,6 +169,14 @@ func effect_shields (e, dmg) {
 ;; Animation::isCompleted
 func anim_completed (c) {
     (c.a.type == "play_once") && (c.times > 0)
+}
+
+;; EffectManager::clearEffects: every effect ends now, and the status
+func effect.clear (e, t) {
+    emit @t :fx.remove [true]
+    set e.stun = false
+    set e.dot = 0.0
+    set e.dot_percent = 0.0
 }
 
 ;; EffectManager::logic of an entity, with its pool of effects
