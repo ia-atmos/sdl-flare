@@ -21,7 +21,7 @@ Last review: 2026-11-18, through the whole conversation.
 | #8 | F8 and F9 (the Empyrean Campaign) | open, work |
 | #9 | A leak of 132 KB at the end of the game | closed: gone |
 | #10 | `await(n, :e)` may replace the task `Frames` | closed: done |
-| #11 | Move the platform layer to `ia-atmos/env-sdl` | open, when asked |
+| #11 | Move the platform layer to `ia-atmos/env-sdl` | open, work (branch `env-sdl`) |
 | #12 | The three items of the plan settled as recommended | reported, not acknowledged |
 | #13 | Scope of F5 by the data of the alpha demo | reported, not acknowledged |
 | #14 | Options added to the patch of the original | reported, not acknowledged |
@@ -103,7 +103,11 @@ loot of events (`chest-ancient_temple`); a stack picked up with a click
 requirements, auto-equip, the stats with the absorption and bonuses of
 the items: `equip-ancient_temple`); the hero in layers with its
 equipment; the NPCs (`stand-cave_goblins`); walls faded over the hero;
-the animations of effects (`shield-cave_goblins`). Next: the absorption
+the animations of effects (`shield-cave_goblins`); the HUD: the action
+bar, the bars of life, mana, and experience (with the experience of the
+kills), and the cursor, identical in their regions (`HUD=1 REGION=` of
+`tools/compare-shot.sh`). Next: the enemy bar, the title of the region,
+the minimap, the active effects, the tooltips; the absorption
 of shields and the heal effect; the carried inventory (slots, stacks of
 max_quantity); a click on the tooltip of a stack, and ACCEPT; the HUD
 (action bar, life and mana orbs, the log, combat text), the menus (the
@@ -130,7 +134,8 @@ migrations (no module keeps an entity).
 #10 Closed: the task `Frames` is gone; its one use is `await(10, :frame)`.
 The counters of frames of the game are timers of the original, kept.
 
-#11 To come, when asked: move the platform part of the layer (window,
+#11 Asked by env-sdl on 2026-11-25 (Flare is its E6): started on the
+branch `env-sdl`, from 8163dec. Move the platform part of the layer (window,
 images, fonts, sounds, input, the test mode of `engine/flare.h` and
 `engine/engine.atm`) to `ia-atmos/env-sdl` (Flare third, after Pingus and
 SNKRX), with the golden outputs identical; the game part (`astar.h`,
