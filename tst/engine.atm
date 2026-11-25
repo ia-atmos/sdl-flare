@@ -21,8 +21,11 @@ print("font", font, fl.text_width(font, "Flare"), fl.text_height(font))
 
 spawn {
     loop e on true {
-        if (e ?? :key) || (e ?? :mouse) {
-            fl.trace(e.tag ++ " " ++ X.tostring(e@0) ++ " " ++ X.tostring(e@1))
+        if e ?? :key {
+            fl.trace(e.tag ++ " " ++ e.key ++ " " ++ e.code)
+        }
+        if e ?? :mouse {
+            fl.trace(e.tag ++ " " ++ X.tostring(e.x) ++ " " ++ X.tostring(e.y) ++ " " ++ X.tostring(e.button))
         }
     }
 }

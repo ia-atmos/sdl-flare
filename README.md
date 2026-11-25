@@ -2,7 +2,10 @@
 
 A port of a slice of [Flare](https://flarerpg.org) (Free Libre Action
 Roleplaying Engine), a 2D action RPG, to
-[Atmos](https://github.com/ia-atmos/lang), over SDL2.
+[Atmos](https://github.com/ia-atmos/lang), over SDL2, through the
+environment [`ia-atmos/env-sdl`](https://github.com/ia-atmos/env-sdl)
+(a checkout at the commit of `env-sdl.txt`, linked as `env` by
+`run.sh`).
 
 The goal is a study: in the C++ original, behavior is kept in state
 enums, timers, and flags that are tested every frame; here each entity,
@@ -56,7 +59,9 @@ In respect of the
       read exactly as the original reads them (`tools/compare-ini.sh`).
 - [x] F2: the engine (`engine/flare.h`, `engine/engine.atm`): window,
       images, fonts, sounds, and the test mode with no screen, with the
-      same variables, generator, and input as the patched original;
+      same variables, generator, and input as the patched original (the
+      window, the loop, the sounds, and the test mode are now those of
+      env-sdl; `run.sh` converts the variables);
       animations (`src/anim.atm`) loaded exactly as the original loads
       them (`tools/compare-anim.sh`).
 - [x] F3: a map drawn (`engine/map.h`, `src/map.atm`): tilesets,

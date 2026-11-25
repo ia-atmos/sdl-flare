@@ -53,19 +53,19 @@ done
 FLARE_FRAMES=30 FLARE_FAST=1 FLARE_SEED=1 FLARE_TRACE=- \
 FLARE_INPUT=tst/engine.in FLARE_SHOT=20:"$OUT/engine.bmp" \
 	./run.sh tst/engine.atm > "$OUT/engine.out" 2>&1
-echo "shot md5 $(md5sum < "$OUT/engine.bmp" | cut -c1-32)" >> "$OUT/engine.out"
+echo "shot md5 $(tools/shot-md5.py "$OUT/engine.bmp")" >> "$OUT/engine.out"
 check engine "$OUT/engine.out"
 
 # animations: a set, and the stance of the zombie as anim.Loop plays it
 FLARE_FRAMES=70 FLARE_FAST=1 FLARE_TRACE=- FLARE_MUTE=1 FLARE_SHOT=40:"$OUT/anim.bmp" \
 	./run.sh tst/anim.atm > "$OUT/anim.out" 2>&1
-echo "shot md5 $(md5sum < "$OUT/anim.bmp" | cut -c1-32)" >> "$OUT/anim.out"
+echo "shot md5 $(tools/shot-md5.py "$OUT/anim.bmp")" >> "$OUT/anim.out"
 check anim "$OUT/anim.out"
 
 # fonts: the styles, justified and shadowed texts
 FLARE_FRAMES=2 FLARE_FAST=1 FLARE_MUTE=1 FLARE_SHOT=1:"$OUT/font.bmp" \
 	./run.sh tst/font.atm > "$OUT/font.out" 2>&1
-echo "shot md5 $(md5sum < "$OUT/font.bmp" | cut -c1-32)" >> "$OUT/font.out"
+echo "shot md5 $(tools/shot-md5.py "$OUT/font.bmp")" >> "$OUT/font.out"
 check font "$OUT/font.out"
 
 # maps: two maps drawn, with tile animations (compared with the original
@@ -74,7 +74,7 @@ check font "$OUT/font.out"
 for m in frontier_outpost cave1; do
 	FLARE_FRAMES=248 FLARE_FAST=1 FLARE_MUTE=1 FLARE_MAP=maps/$m.txt FLARE_SHOT=247:"$OUT/map.bmp" \
 		./run.sh tst/map.atm >> "$OUT/map.out" 2>&1
-	echo "$m shot md5 $(md5sum < "$OUT/map.bmp" | cut -c1-32)" >> "$OUT/map.out"
+	echo "$m shot md5 $(tools/shot-md5.py "$OUT/map.bmp")" >> "$OUT/map.out"
 done
 check map "$OUT/map.out"
 

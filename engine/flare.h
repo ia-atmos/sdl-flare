@@ -1,42 +1,28 @@
 // The C side of the engine of the port of Flare.
 //
-// It is included by `engine/engine.atm`, in a prelude, after the header
-// of the runtime of Atmos. It holds what is not game logic, and what
-// works per pixel:
+// It is included by `engine/engine.atm`, in a prelude, after the
+// environment `env/sdl.atm` (ia-atmos/env-sdl), which holds the window,
+// the loop of frames, the events, the sounds, and the test mode. This
+// file holds what the game needs beyond it, and what works per pixel:
 //
-//   - the driver: the window, the loop of logic frames, the events of
-//     SDL, and the test mode;
 //   - the generator of random numbers of the patched original;
 //   - the trace;
-//   - images: loading with a cache by path, and drawing of parts, as the
-//     software renderer of the original (SDLSoftwareRenderDevice): ARGB8888
-//     surfaces blitted onto a screen surface, which is copied to the
-//     window once per frame, so that the pixels are the same;
-//   - fonts (TrueType) and texts;
-//   - sounds and music.
+//   - the table of images drawn from C (the map, the renders), over the
+//     images of the environment, blitted onto its screen surface (the
+//     software path: ARGB8888 surfaces, as the software renderer of the
+//     original, SDLSoftwareRenderDevice, so that the pixels are the same);
+//   - fonts (TrueType) and texts, as SDLFontEngine;
+//   - the state of the input of the original (InputState).
 //
-// Values cross to Atmos as numbers: an image, a font, or a sound is an
-// index in a table of this file, which lives until the program ends.
-//
-// The loop runs in logic frames, at 60 per second, as the original
-// (`max_fps`). Each frame emits, in order:
-//
-//      :key.dn [name]          a key was pressed (name: SDL scancode name)
-//      :key.up [name]          a key was released
-//      :mouse.motion [x,y]     the mouse moved
-//      :mouse.dn [x,y,but]     a button was pressed (1 left, 3 right)
-//      :mouse.up [x,y,but]     a button was released
-//      :quit                   the window was closed
-//      :frame [n]              one logic frame (n from 0)
-//      :draw                   to draw the screen
+// Values cross to Atmos as numbers: an image or a font is an index in a
+// table of this file, which lives until the program ends.
 //
 // Coordinates are those of the render, 1706x960 for a window of
-// 1280x720, as the original computes them (`windowResizeInternal`). The
-// render is a texture, scaled to the window when presented.
+// 1280x720, as the original computes them (`windowResizeInternal`).
 //
-// The test mode takes the variables of the patched original (see
-// `doc/fidelity.md`): FLARE_SEED, FLARE_FAST, FLARE_FRAMES, FLARE_INPUT,
-// FLARE_TRACE, FLARE_SHOT, and also FLARE_MUTE (no audio).
+// The test mode is that of the environment; `run.sh` converts the
+// variables of the patched original to it (see `doc/fidelity.md`), but
+// FLARE_SEED and FLARE_TRACE, which are read here.
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,15 +35,10 @@
 #include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_ttf.h>
 
-static SDL_Window*   FL_WIN = NULL;
-static SDL_Renderer* FL_REN = NULL;
-static SDL_Surface*  FL_SCREEN = NULL;  // the render, at FL_W x FL_H
-static SDL_Texture*  FL_TEX = NULL;     // the render, sent to the window
+#define FL_SCREEN sdl_scr()              // the render, at FL_W x FL_H
 static int           FL_W   = 1706;
 static int           FL_H   = 960;
-static int           FL_SND = 0;        // audio is open
 static unsigned long FL_FRAME = 0;      // logic frames done
-static float         FL_SCALE = 1.0f;   // render / window, as view_scaling
 
 static int fl_int (AVal v) {
     return a_isnum(v) ? (int)a_dbl(v) : 0;
@@ -141,34 +122,40 @@ typedef struct {
 static FlImg FL_IMGS[FL_IMGS_MAX];
 static int   FL_IMGS_N = 0;
 
-// The image of a path, loaded once. Returns its index, or -1. A raw image
-// keeps the format of IMG_Load, as the images of animations of the
-// original (RenderDevice::loadQueuedImages), which SDL blends differently
-// from the ARGB8888 of the others (SDLSoftwareRenderDevice::loadImage).
-static int fl_img_load (const char* path, int raw) {
+// The index of an image of a path, or -1 if it failed to load, or -2 if
+// it was not loaded. A raw image keeps the format of IMG_Load, as the
+// images of animations of the original (RenderDevice::loadQueuedImages),
+// which SDL blends differently from the ARGB8888 of the others
+// (SDLSoftwareRenderDevice::loadImage).
+static int fl_img_find (const char* path, int raw) {
     for (int i=0; i<FL_IMGS_N; i++) {
         if (strcmp(FL_IMGS[i].path, path) == 0 && FL_IMGS[i].raw == raw) {
             return FL_IMGS[i].tex ? i : -1;
         }
     }
+    return -2;
+}
+
+// Adds an image of the environment (or nil, a failed load), which the
+// caller keeps alive: its index, or -1. It is converted to ARGB8888 now,
+// as the environment does at its first draw (sdl_blit with no
+// destination), unless raw.
+static int fl_img_add (AVal v, const char* path, int raw) {
     if (FL_IMGS_N == FL_IMGS_MAX) {
         return -1;
     }
     FlImg* img = &FL_IMGS[FL_IMGS_N];
     img->path = strdup(path);
     img->raw = raw;
-    SDL_Surface* ld = IMG_Load(path);
     img->tex = NULL;
     img->w = img->h = 0;
-    if (ld == NULL) {
+    if (v.type == A_NIL) {
         fprintf(stderr, "flare : image : %s : %s\n", path, IMG_GetError());
     } else {
-        if (img->raw) {
-            img->tex = ld;
-        } else {
-            img->tex = SDL_ConvertSurfaceFormat(ld, SDL_PIXELFORMAT_ARGB8888, 0);
-            SDL_FreeSurface(ld);
+        if (!raw) {
+            sdl_blit(v, NULL, NULL, 255);
         }
+        img->tex = sdl_sfc(v);
         img->w = img->tex->w;
         img->h = img->tex->h;
     }
@@ -272,68 +259,6 @@ static void fl_font_draw (int fi, const char* s, int x, int y, int justify, int 
     SDL_FreeSurface(sfc);
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// SOUNDS AND MUSIC
-///////////////////////////////////////////////////////////////////////////////
-
-typedef struct {
-    char*      path;
-    Mix_Chunk* chunk;
-} FlSnd;
-
-#define FL_SNDS_MAX 1024
-static FlSnd FL_SNDS[FL_SNDS_MAX];
-static int   FL_SNDS_N = 0;
-
-// The sound of a path, loaded once: its index, or -1 (also with no audio).
-static int fl_snd_load (const char* path) {
-    if (!FL_SND) {
-        return -1;
-    }
-    for (int i=0; i<FL_SNDS_N; i++) {
-        if (strcmp(FL_SNDS[i].path, path) == 0) {
-            return FL_SNDS[i].chunk ? i : -1;
-        }
-    }
-    if (FL_SNDS_N == FL_SNDS_MAX) {
-        return -1;
-    }
-    FL_SNDS[FL_SNDS_N].path = strdup(path);
-    FL_SNDS[FL_SNDS_N].chunk = Mix_LoadWAV(path);
-    return FL_SNDS[FL_SNDS_N].chunk ? FL_SNDS_N++ : (FL_SNDS_N++, -1);
-}
-
-// Plays a sound with a volume from 0 to 128.
-static void fl_snd_play (int i, int volume) {
-    if (FL_SND && i >= 0 && i < FL_SNDS_N && FL_SNDS[i].chunk) {
-        int ch = Mix_PlayChannel(-1, FL_SNDS[i].chunk, 0);
-        if (ch >= 0) {
-            Mix_Volume(ch, volume);
-        }
-    }
-}
-
-static Mix_Music* FL_MUS = NULL;
-
-static void fl_music_stop (void) {
-    if (FL_MUS != NULL) {
-        Mix_HaltMusic();
-        Mix_FreeMusic(FL_MUS);
-        FL_MUS = NULL;
-    }
-}
-
-static void fl_music (const char* path) {
-    if (!FL_SND) {
-        return;
-    }
-    fl_music_stop();
-    FL_MUS = Mix_LoadMUS(path);
-    if (FL_MUS != NULL) {
-        Mix_PlayMusic(FL_MUS, -1);
-    }
-}
-
 #include "engine/map.h"
 #include "engine/collision.h"
 #include "engine/geom.h"
@@ -383,8 +308,8 @@ static const FlBind FL_KEYS[] = {
     { FL_DEL, SDL_SCANCODE_DELETE }, { FL_DEL, SDL_SCANCODE_BACKSPACE },
 };
 
-// InputState::handle, before the events of a frame: what was released in
-// the frame before is no longer pressed nor locked
+// InputState::handle: what was released in the frame before is no longer
+// pressed nor locked
 static void fl_input_frame (void) {
     for (int k=0; k<FL_KEY_COUNT; k++) {
         if (FL_UNPRESS[k]) {
@@ -424,247 +349,25 @@ static void fl_input_mouse (int x, int y, int button, int down) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// DRIVER
+// START
 ///////////////////////////////////////////////////////////////////////////////
 
-static AVal fl_field (AVal t, const char* k, AVal v) {
-    AVal key = a_strz(k);
-    a_setindex(t, key, v);
-    a_dec(key);
-    a_dec(v);
-    return t;
+// InputState::handle, after the frame: what was released in it is no
+// longer pressed nor locked (the original does it before the events of
+// the next frame, which is the same)
+static void fl_flush (int render) {
+    (void) render;
+    fl_input_frame();
 }
 
-// Emits `:tag`, `:tag [name]`, or `:tag [x,y,but]`, with the values at
-// the positions 0, 1, 2 of the table.
-static AStatus fl_emit (const char* tag, const char* name, int x, int y, int but) {
-    AVal t = a_strz(tag);
-    AVal evt = a_tab();
-    a_tag(evt, t);
-    if (name != NULL) {
-        AVal v = a_strz(name);
-        a_setindex(evt, a_int(0), v);
-        a_dec(v);
-    } else if (x >= 0) {
-        a_setindex(evt, a_int(0), a_int(x));
-        a_setindex(evt, a_int(1), a_int(y));
-        if (but >= 0) {
-            a_setindex(evt, a_int(2), a_int(but));
-        }
-    }
-    AStatus st = atm_emit(evt);
-    a_dec(evt);
-    a_dec(t);
-    return st;
-}
-
-// Saves the render as a BMP, as the patched original does.
-static void fl_shot (const char* path) {
-    SDL_SaveBMP(FL_SCREEN, path);
-}
-
-// The scripted input (FLARE_INPUT): the lines of the frame that are
-// due, as events, in the format of the patched original:
-//      <frame> move <x> <y> | down <b> | up <b> | key <name> | keyup <name> | quit
-static FILE* FL_INPUT = NULL;
-static char  FL_INPUT_LINE[256];
-static int   FL_INPUT_PEND = 0;
-static int   FL_MX = 0, FL_MY = 0;
-
-static AStatus fl_script (int* quit) {
-    AStatus st = A_OK;
-    while (FL_INPUT != NULL && st == A_OK) {
-        if (!FL_INPUT_PEND) {
-            if (fgets(FL_INPUT_LINE, sizeof(FL_INPUT_LINE), FL_INPUT) == NULL) {
-                fclose(FL_INPUT);
-                FL_INPUT = NULL;
-                break;
-            }
-            if (FL_INPUT_LINE[0] == '#' || FL_INPUT_LINE[0] == '\n') {
-                continue;
-            }
-            FL_INPUT_PEND = 1;
-        }
-        if (strtoul(FL_INPUT_LINE, NULL, 10) > FL_FRAME) {
-            break;
-        }
-        FL_INPUT_PEND = 0;
-        char cmd[32] = "", arg[64] = "";
-        int b = 0;
-        if (sscanf(FL_INPUT_LINE, "%*u %31s %63s %d", cmd, arg, &b) < 1) {
-            continue;
-        }
-        int a = atoi(arg);
-        if (!strcmp(cmd, "move")) {
-            FL_MX = a; FL_MY = b;
-            FL_MOUSE_X = a; FL_MOUSE_Y = b;
-            st = fl_emit("mouse.motion", NULL, FL_MX, FL_MY, -1);
-        } else if (!strcmp(cmd, "down")) {
-            fl_input_mouse(FL_MX, FL_MY, a, 1);
-            st = fl_emit("mouse.dn", NULL, FL_MX, FL_MY, a);
-        } else if (!strcmp(cmd, "up")) {
-            fl_input_mouse(FL_MX, FL_MY, a, 0);
-            st = fl_emit("mouse.up", NULL, FL_MX, FL_MY, a);
-        } else if (!strcmp(cmd, "key")) {
-            fl_input_key(SDL_GetScancodeFromName(arg), 1);
-            st = fl_emit("key.dn", arg, -1, -1, -1);
-        } else if (!strcmp(cmd, "keyup")) {
-            fl_input_key(SDL_GetScancodeFromName(arg), 0);
-            st = fl_emit("key.up", arg, -1, -1, -1);
-        } else if (!strcmp(cmd, "quit")) {
-            st = fl_emit("quit", NULL, -1, -1, -1);
-            *quit = 1;
-        }
-    }
-    return st;
-}
-
-int main (int argc, char** argv) {
-    int mute = fl_env("FLARE_MUTE") != NULL;
-    if (SDL_Init(SDL_INIT_VIDEO | (mute ? 0 : SDL_INIT_AUDIO)) != 0) {
-        SDL_Init(SDL_INIT_VIDEO);
-    }
-    FL_SND = !mute && (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024) == 0);
-    if (FL_SND) {
-        Mix_AllocateChannels(128);
-    }
-    TTF_Init();
-
-    // the seed, as the patched original: FLARE_SEED, or the time
+// After the window: the size of the render, the seed (FLARE_SEED, or the
+// time), the trace (FLARE_TRACE: a file, or "-" for stdout).
+static void fl_start (void) {
+    sdl_size(&FL_W, &FL_H);
     FL_RND = fl_env("FLARE_SEED") ? strtoull(fl_env("FLARE_SEED"), NULL, 10)
                                   : (uint64_t)time(NULL);
     if (fl_env("FLARE_TRACE")) {
         FL_TRACE = strcmp(fl_env("FLARE_TRACE"), "-") ? fopen(fl_env("FLARE_TRACE"), "w") : stdout;
     }
-    if (fl_env("FLARE_INPUT")) {
-        FL_INPUT = fopen(fl_env("FLARE_INPUT"), "r");
-    }
-    unsigned long frames = fl_env("FLARE_FRAMES") ? strtoul(fl_env("FLARE_FRAMES"), NULL, 10) : 0;
-    int fast = fl_env("FLARE_FAST") != NULL;
-    long shot = -1;
-    const char* shot_path = NULL;
-    if (fl_env("FLARE_SHOT")) {
-        shot = strtol(fl_env("FLARE_SHOT"), NULL, 10);
-        shot_path = strchr(fl_env("FLARE_SHOT"), ':');
-        shot_path = shot_path ? shot_path + 1 : NULL;
-    }
-
-    // the window and the render, as the original computes them
-    int sw = 1280, sh = 720;
-    FL_H = 960;
-    FL_W = (int)((float)sw * ((float)FL_H / (float)sh));
-    FL_WIN = SDL_CreateWindow("Flare", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, sw, sh, 0);
-    if (FL_WIN != NULL) {
-        FL_REN = SDL_CreateRenderer(FL_WIN, -1, 0);
-    }
-    if (FL_REN == NULL) {
-        fprintf(stderr, "flare : %s\n", SDL_GetError());
-        exit(1);
-    }
-    FL_SCALE = (float)FL_H / (float)sh;
-    FL_SCREEN = SDL_CreateRGBSurfaceWithFormat(0, FL_W, FL_H, 32, SDL_PIXELFORMAT_ARGB8888);
-    FL_TEX = SDL_CreateTexture(FL_REN, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, FL_W, FL_H);
-
-    atm_init(argc, argv);
-    AStatus st = atm_main();
-
-    int quit = 0;
-    const Uint32 period = 1000 / 60;
-    while (st == A_OK && !quit && atm_alive()) {
-        Uint32 t0 = SDL_GetTicks();
-        fl_input_frame();
-        SDL_Event e;
-        while (st == A_OK && SDL_PollEvent(&e)) {
-            switch (e.type) {
-                case SDL_QUIT:
-                    st = fl_emit("quit", NULL, -1, -1, -1);
-                    quit = 1;
-                    break;
-                case SDL_KEYDOWN:
-                    fl_input_key(e.key.keysym.scancode, 1);
-                    if (!e.key.repeat) {
-                        st = fl_emit("key.dn", SDL_GetScancodeName(e.key.keysym.scancode), -1, -1, -1);
-                    }
-                    break;
-                case SDL_KEYUP:
-                    fl_input_key(e.key.keysym.scancode, 0);
-                    st = fl_emit("key.up", SDL_GetScancodeName(e.key.keysym.scancode), -1, -1, -1);
-                    break;
-                // from the window to the render, as InputState::scaleMouse
-                case SDL_MOUSEMOTION:
-                    FL_MOUSE_X = (int)((float)e.motion.x * FL_SCALE);
-                    FL_MOUSE_Y = (int)((float)e.motion.y * FL_SCALE);
-                    st = fl_emit("mouse.motion", NULL, FL_MOUSE_X, FL_MOUSE_Y, -1);
-                    break;
-                case SDL_MOUSEBUTTONDOWN:
-                    fl_input_mouse((int)((float)e.button.x * FL_SCALE), (int)((float)e.button.y * FL_SCALE),
-                                   e.button.button, 1);
-                    st = fl_emit("mouse.dn", NULL, FL_MOUSE_X, FL_MOUSE_Y, e.button.button);
-                    break;
-                case SDL_MOUSEBUTTONUP:
-                    fl_input_mouse((int)((float)e.button.x * FL_SCALE), (int)((float)e.button.y * FL_SCALE),
-                                   e.button.button, 0);
-                    st = fl_emit("mouse.up", NULL, FL_MOUSE_X, FL_MOUSE_Y, e.button.button);
-                    break;
-            }
-        }
-        if (st == A_OK && !quit) {
-            st = fl_script(&quit);
-        }
-
-        // one logic frame
-        if (st == A_OK && !quit) {
-            AVal t = a_strz("frame");
-            AVal evt = a_tab();
-            a_tag(evt, t);
-            a_setindex(evt, a_int(0), a_int((int64_t)FL_FRAME));
-            st = atm_emit(evt);
-            a_dec(evt);
-            a_dec(t);
-            FL_FRAME++;
-            if (frames > 0 && FL_FRAME >= frames) {
-                quit = 1;
-            }
-        }
-
-        // the screen
-        if (st == A_OK) {
-            SDL_FillRect(FL_SCREEN, NULL, SDL_MapRGBA(FL_SCREEN->format, 0, 0, 0, 255));
-            st = fl_emit("draw", NULL, -1, -1, -1);
-            if (shot_path && FL_FRAME == (unsigned long)shot) {
-                fl_shot(shot_path);
-            }
-            SDL_UpdateTexture(FL_TEX, NULL, FL_SCREEN->pixels, FL_SCREEN->pitch);
-            SDL_RenderClear(FL_REN);
-            SDL_RenderCopy(FL_REN, FL_TEX, NULL, NULL);
-            SDL_RenderPresent(FL_REN);
-        }
-
-        if (!fast) {
-            Uint32 spent = SDL_GetTicks() - t0;
-            if (spent < period) {
-                SDL_Delay(period - spent);
-            }
-        }
-    }
-
-    if (st == A_OK) {
-        st = atm_stop();
-    }
-    fflush(stdout);
-    if (st == A_ESCAPE) {
-        st = a_escape_err();
-    }
-    if (st != A_OK) {
-        a_error_dump();
-    }
-    fprintf(stderr, "flare: frames %lu\n", FL_FRAME);
-    atm_quit();
-    fl_music_stop();
-    if (FL_SND) {
-        Mix_CloseAudio();
-    }
-    TTF_Quit();
-    SDL_Quit();
-    return (st == A_OK) ? 0 : 1;
+    sdl_on_flush(fl_flush);
 }

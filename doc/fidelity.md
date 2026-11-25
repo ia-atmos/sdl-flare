@@ -30,7 +30,7 @@ The patch adds `src/Bench.h`, included before every source file
 | `FLARE_ONLYMAP=1` | draw only the layers of the map: no objects, menus, texts, nor cursor |
 | `FLARE_NOHUD=1` | draw the map and its objects, with no menus, combat text, tooltips, nor cursor |
 | `FLARE_NOHERO=1` | do not draw the hero (port too) |
-| `FLARE_SHOT=<n>:<file>` | save the screen at logic frame n, as BMP |
+| `FLARE_SHOT=<n>:<file>` | save the screen at logic frame n, as BMP (the port: PNG, from env-sdl; compared by pixels, `tools/shot-md5.py`) |
 | `FLARE_INI=<list>` | do not play: dump each file of the list as `FileParser` reads it across the mods, to the trace |
 | `FLARE_ANIM=<list>` | do not play: dump each animation file of the list as `AnimationSet` loads it, to the trace |
 

@@ -1,13 +1,83 @@
-;; The engine of the port, over `engine/flare.h`: the functions of C as a
-;; table `fl`, and the clock of logic frames.
+;; The engine of the port, over the environment ia-atmos/env-sdl
+;; (`env/sdl.atm`, see `run.sh`) and `engine/flare.h`: the functions of C
+;; as a table `fl`.
 ;;
-;; The program runs inside the loop of `flare.h`, which emits, once per
-;; logic frame, the input of the frame, then `:frame [n]`, then `:draw`
-;; (see the header of `engine/flare.h`).
+;; The program runs inside the loop of the environment, which emits, once
+;; per logic frame, the input of the frame, then `:frame [n, us]` (n from
+;; 1), then `:draw`. The window is 1280x720, and the game draws in a
+;; render of 1706x960, a surface of ARGB8888 (the software path).
+
+include "../env/sdl.atm"
 
 ```:prelude
 #include "engine/flare.h"
 ```
+
+sdl.window [title="Flare", width=1280, height=720, logical=[1706, 960], software=true]
+`fl_start();`
+
+;; the frames done, the input of the original (InputState), and the mouse
+;; of the window in the render (InputState::scaleMouse; the scripted input
+;; is in the render already)
+spawn {
+    loop e on :frame {
+        val n = e.n
+        `FL_FRAME = (unsigned long)(fl_int($n) - 1);`
+    }
+}
+spawn {
+    loop on :draw {
+        `FL_FRAME = (unsigned long)SDL_FRAME;`
+    }
+}
+func fl_mouse_xy (e) {
+    if sdl.testing() || `:boolean getenv("SDL_ATM_FRAMES") != NULL` {
+        return e.x, e.y
+    } else {
+        val s = `:number.float (double)((float)FL_H / 720.0f)`
+        val x, y = e.x, e.y
+        return `:number (int)((float)a_dbl($x) * (float)a_dbl($s))`,
+               `:number (int)((float)a_dbl($y) * (float)a_dbl($s))`
+    }
+}
+spawn {
+    loop e on :key.dn {
+        val c = e.code
+        `fl_input_key(SDL_GetScancodeFromName(fl_cstr($c)), 1);`
+    }
+}
+spawn {
+    loop e on :key.up {
+        val c = e.code
+        `fl_input_key(SDL_GetScancodeFromName(fl_cstr($c)), 0);`
+    }
+}
+spawn {
+    loop e on :mouse.motion {
+        val x, y = fl_mouse_xy(e)
+        `FL_MOUSE_X = fl_int($x); FL_MOUSE_Y = fl_int($y);`
+    }
+}
+spawn {
+    loop e on :mouse.button.dn {
+        val x, y = fl_mouse_xy(e)
+        val b = e.button
+        `fl_input_mouse(fl_int($x), fl_int($y), fl_int($b), 1);`
+    }
+}
+spawn {
+    loop e on :mouse.button.up {
+        val x, y = fl_mouse_xy(e)
+        val b = e.button
+        `fl_input_mouse(fl_int($x), fl_int($y), fl_int($b), 0);`
+    }
+}
+
+;; the images and the sounds of the environment, kept to the end, by the
+;; indexes of `fl.img` and `fl.snd`
+pin fl_imgs = []
+pin fl_snds = []
+pin fl_snds_by = []     ;; path -> index, loaded once
 
 ;; the actions of the input, as `Input::` of the original
 pin Input = [
@@ -63,7 +133,13 @@ pin fl = [
     ;; images: an index, or -1
     img = func (path, raw) {
         val r = if raw => 1 => 0
-        `:number fl_img_load(fl_cstr($path), fl_int($r))`
+        val i = `:number fl_img_find(fl_cstr($path), fl_int($r))`
+        if i != -2 {
+            return i
+        }
+        val v = sdl.image(path, raw)
+        set fl_imgs@+ = v
+        `:number fl_img_add($v, fl_cstr($path), fl_int($r))`
     },
     size = func (i) {
         val w = `:number ({ FlImg* p = fl_img(fl_int($i)); p ? p->w : 0; })`
@@ -112,19 +188,31 @@ pin fl = [
         `:number fl_font_height(fl_int($f))`
     },
 
-    ;; sounds: an index, or -1 (also with no audio)
+    ;; sounds: an index, or -1; with no audio, a sound that plays nothing
     snd = func (path) {
-        `:number fl_snd_load(fl_cstr($path))`
+        if fl_snds_by@path == nil {
+            val v = sdl.sound(path)
+            set fl_snds_by@path = if v == nil {
+                -1
+            } else {
+                set fl_snds@+ = v
+                #fl_snds - 1
+            }
+        }
+        fl_snds_by@path
     },
+    ;; a volume from 0 to 128
     play = func (i, vol) {
         val v = if vol == nil => 128 => vol
-        `fl_snd_play(fl_int($i), fl_int($v));`
+        if fl_snds@i {
+            sdl.play(fl_snds@i, v / 128)
+        }
     },
     music = func (path) {
-        `fl_music(fl_cstr($path));`
+        sdl.music(path)
     },
     music_stop = func () {
-        `fl_music_stop();`
+        sdl.music_stop()
     },
 
     ;; the map: see `engine/map.h`

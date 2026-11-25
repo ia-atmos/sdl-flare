@@ -21,7 +21,7 @@ for m in $MAPS; do
 		"$ROOT/tools/bench/run.sh" 2>/dev/null
 	SDL_VIDEODRIVER=dummy FLARE_MUTE=1 FLARE_FAST=1 FLARE_MAP=maps/$m.txt FLARE_FRAMES=$((N+1)) \
 		FLARE_SHOT=$N:"$TMP/port.bmp" "$ROOT/run.sh" tst/map.atm > /dev/null 2>&1
-	if cmp -s "$TMP/orig.bmp" "$TMP/port.bmp"; then
+	if [ "$("$ROOT/tools/shot-md5.py" "$TMP/orig.bmp")" = "$("$ROOT/tools/shot-md5.py" "$TMP/port.bmp")" ]; then
 		echo "same  $m"
 	else
 		echo "DIFF  $m $(python3 -c "
