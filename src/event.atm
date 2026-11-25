@@ -70,6 +70,7 @@ func event_components (ev, k, v) {
         }
         "intramap" => { set ev.comps@+ = [type = k, x = parse.int(l@0), y = parse.int(l@1)] }
         "soundfx" => { set ev.comps@+ = [type = k, s = l@0] }
+        "msg" => { set ev.comps@+ = [type = k, s = v] }
         "power" => { set ev.comps@+ = [type = k, id = parse.int(v)] }
         "power_damage" => { set ev.comps@+ = [type = k, min = parse.float(l@0), max = parse.float(l@1)] }
         "power_path" => {
@@ -215,6 +216,7 @@ func event.execute (ev, w, h) {
                 }
                 set map_loot.entries@+ = X.copy(c)
             }
+            "msg" => { set h.log_msg@+ = [c.s, true] }      ;; to the log, unique
             "set_status" => { set campaign.status@(c.s) = true }
             "unset_status" => { set campaign.status@(c.s) = nil }
             "intermap" => {
