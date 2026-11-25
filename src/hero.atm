@@ -454,8 +454,10 @@ task HDead (h, turning) {
     loop {
         hero_anim(h, "die")
         if !h.corpse && anim.is_first(h.cur) && (anim.played(h.cur) < 1) {
-            ;; the death: the power cooldowns end, the death penalty is
-            ;; raised (MenuInventory::logic), MAIN1 is locked if pressed
+            ;; the death: the effects end, the power cooldowns end, the
+            ;; death penalty is raised (MenuInventory::logic), MAIN1 is
+            ;; locked if pressed
+            effect.clear(h, h.task)
             timer_end_now(h.cooldown)
             loop _, t in h.casting {
                 set t.cur = 0

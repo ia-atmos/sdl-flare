@@ -7,7 +7,8 @@
 ;; Done: the bars of life, mana, and experience (MenuStatBar), the action
 ;; bar (MenuActionBar), the enemy under the mouse (MenuEnemy), the title
 ;; of the region (MenuRegionTitle), the minimap (MenuMiniMap, its zoom of
-;; 1x: the click that turns it to 2x is not ported). Not drawn: tooltips and the
+;; 1x: the click that turns it to 2x is not ported), the effects of the
+;; hero (MenuActiveEffects; no effect of the slice groups its stacks). Not drawn: tooltips and the
 ;; labels of hotkeys (hidden by engine/widget_settings.txt).
 
 pin hud = [
@@ -25,6 +26,8 @@ pin hud = [
     ens = nil,          ;; the enemies of the map, set :out by MapRun
     npcs = nil,         ;; the NPCs of the map, set :out by MapRun
     events = nil,       ;; the events of the map, set :out by MapRun
+    effects = [],       ;; MenuActiveEffects: [icon, x, y, overlay y], by hud.logic
+    fx_pos = [8, 80],   ;; its window
 ]
 
 ;; Utils::alignToScreenEdge of a rect of a menu
@@ -163,6 +166,8 @@ func hud.init () {
     ;; visible_radius
     set mi.radius = fl.f32(fl.f32(math.max(mi.pos@2, mi.pos@3)) * fl.f32(0.7071))
     set hud.mini = mi
+    val fm = hud.menu("menus/activeeffects.txt")
+    set hud.fx_pos = [fm.x, fm.y]
 }
 
 func hud.rgb (l) {
@@ -250,6 +255,25 @@ func hud.logic (h) {
         set hud.enemy = nil
     }
     hud.region_logic()
+    ;; MenuActiveEffects::logic: an icon per effect that has one, in rows
+    val vw, _ = fl.view()
+    val per = math.max(1, (vw - hud.fx_pos@0) // hud.icon)
+    val ics = []
+    loop _, f in h.fx_icons || [] {
+        if f.icon != -1 {
+            val n = #ics
+            val x = hud.fx_pos@0 + ((n % per) * hud.icon)
+            val y = hud.fx_pos@1 + ((n // per) * hud.icon)
+            val oy = ifs {
+                f.type == "shield" => math.floor(fl.f32(fl.f32(hud.icon * f.shield.m) / f.shield.max))
+                f.type == "heal" => hud.icon
+                f.dur > 0 => (hud.icon * f.cur) // f.dur
+                else => hud.icon
+            }
+            set ics@+ = [icon = f.icon, x = x, y = y, oy = oy]
+        }
+    }
+    set hud.effects = ics
     ;; MenuStatBar::update
     val hb, mb, xb = hud.stats@0, hud.stats@1, hud.stats@2
     set hb.cur, hb.max = h.hp, h.hp_max
@@ -444,6 +468,18 @@ func hud.mini_entities (h, m, ox, oy, mw, mh) {
     }
 }
 
+;; MenuActiveEffects::render: each icon, and the part of disabled.png
+;; below its overlay at the top of the icon
+func hud.draw_effects () {
+    loop _, f in hud.effects {
+        hud.draw_icon(f.icon, f.x, f.y)
+        val oh = hud.icon - f.oy
+        if oh > 0 {
+            fl.part(hud.image("images/menus/disabled.png"), 0, f.oy, hud.icon, oh, f.x, f.y)
+        }
+    }
+}
+
 ;; MenuEnemy::render: the background, the fill of its life, its name and
 ;; level, and its life (or Dead, or Destroyed)
 func hud.draw_enemy () {
@@ -497,6 +533,7 @@ func hud.draw (h) {
     loop _, b in hud.stats {
         hud.draw_stat(b)
     }
+    hud.draw_effects()
     hud.draw_bar()
     hud.draw_enemy()
     hud.draw_region()
