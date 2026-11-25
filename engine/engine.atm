@@ -170,6 +170,17 @@ pin fl = [
         val b = if blend == false => 0 => 1
         `fl_font_draw(fl_int($f), fl_cstr($s), fl_int($x), fl_int($y), fl_int($j), fl_int($c), fl_int($b));`
     },
+    ;; fl.label(font, s, x, y, color, sx, sy, blend, alpha): a label with its
+    ;; shadow at sx,sy, its top left at x,y (see fl_label)
+    label = func (f, s, x, y, color, sx, sy, blend, alpha) {
+        val b = if blend == false => 0 => 1
+        val a = if alpha == nil => 255 => alpha
+        `fl_label(fl_int($f), fl_cstr($s), fl_int($x), fl_int($y), fl_int($color), fl_int($sx), fl_int($sy), fl_int($b), fl_int($a));`
+    },
+    ;; the height of a label: of the text, or of the line if more
+    label_height = func (f, s) {
+        `:number ({ int w=0, h=0; if (fl_int($f) >= 0 && fl_int($f) < FL_FONTS_N) { TTF_SizeUTF8(FL_FONTS[fl_int($f)], fl_cstr($s), &w, &h); int l = TTF_FontLineSkip(FL_FONTS[fl_int($f)]); if (l > h) h = l; } h; })`
+    },
     text_width = func (f, s) {
         `:number fl_font_width(fl_int($f), fl_cstr($s))`
     },
@@ -202,6 +213,23 @@ pin fl = [
     },
     music_stop = func () {
         sdl.music_stop()
+    },
+
+    ;; the minimap: see `engine/minimap.h`
+    map_size = func () {
+        return `:number FL_MAP_W`, `:number FL_MAP_H`
+    },
+    mm_prerender = func (zoom, w, h, wall, obst) {
+        `fl_mm_prerender(fl_int($zoom), fl_int($w), fl_int($h), (int64_t)a_dbl($wall), (int64_t)a_dbl($obst));`
+    },
+    mm_clear = func () {
+        `fl_mm_clear();`
+    },
+    mm_entity = func (x, y, ox, oy, c) {
+        `fl_mm_entity(fl_int($x), fl_int($y), fl_int($ox), fl_int($oy), (int64_t)a_dbl($c));`
+    },
+    mm_draw = func (cx, cy, w, h, ax, ay) {
+        `fl_mm_draw(fl_int($cx), fl_int($cy), fl_int($w), fl_int($h), fl_int($ax), fl_int($ay));`
     },
 
     ;; the map: see `engine/map.h`
