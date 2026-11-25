@@ -100,7 +100,7 @@ task Effect (e, fx) {
     }
     ;; its icon, for MenuActiveEffects: its timer and its shield
     set e.fx_icons = e.fx_icons || []
-    val ic = vector.insert(e.fx_icons, [icon = fx.icon || -1, name = fx.name || "", type = fx.type,
+    val ic = vector.insert(e.fx_icons, [icon = fx.icon || -1, name = fx.name || "", type = fx.type, id = fx.id,
                                         cur = fx.dur, dur = fx.dur, shield = sh])
     defer {
         var k = nil
@@ -123,7 +123,7 @@ task Effect (e, fx) {
     ;; the status, with the timer at `cur`: damage over time on each whole
     ;; second of the timer (or at its begin, if shorter than a second)
     val func status (cur) {
-        set ic.cur = cur
+        set ic.cur = cur - 1        ;; the timer ticks after the status
         val timed = ((cur % 60) == 0) || ((fx.dur < 60) && (cur == fx.dur))
         match fx.type {
             "stun" => { set e.stun = true }

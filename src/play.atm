@@ -10,6 +10,7 @@
 ;;      the trace                   benchTrace()
 
 pin play = [
+    first_load = true,  ;; GameStatePlay::is_first_map_load
     world = nil,        ;; the world of the current map (see play_world)
     events = [],        ;; the events of the current map
     seen = nil,         ;; what the trace saw in the last frame: the hero
@@ -269,6 +270,14 @@ task MapRun (path, pos, h) {
     set hud.map_title = m.title
     ctext.clear()
     set hud.map_change = true
+    ;; checkTeleport: the game is saved at each map but the first
+    ;; (save_onload), with its message; then checkLog (cleared at a respawn)
+    if play.first_load {
+        set play.first_load = false
+    } else {
+        hud.log_add("Game saved.", false)
+    }
+    hud.log_check(hp)
     set play.next_id = 1
     val p = pos || m.hero
     set hp.x, hp.y = fl.f32(p@0), fl.f32(p@1)
@@ -450,7 +459,6 @@ task MapRun (path, pos, h) {
         ;; checkTeleport: another map ends this one; then checkLog: the
         ;; messages of the hero to the log
         if w.teleport {
-            hud.log_check(hp)
             val tp = w.teleport
             set w.teleport = nil
             if tp.map {
