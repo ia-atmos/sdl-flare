@@ -1,0 +1,115 @@
+;; The combat text (CombatText): numbers and words that float up from an
+;; entity for a second, over the HUD (engine/combat_text.txt: none in the
+;; data, so its defaults).
+;;
+;;      ctext.add(s, x, y, kind)        addString: a text at a map position
+;;      ctext.add_num(n, x, y, kind)    addFloat: a number, summed with the
+;;                                      one of the same kind and place just
+;;                                      added
+;;      ctext.logic()                   a logic frame: up, apart, aged
+;;      ctext.draw()                    the texts alive
+;;      ctext.clear()                   at a new map
+;;
+;; Kinds: "givedmg", "takedmg", "crit", "buff", "miss" (font_colors.txt).
+
+pin ctext = [
+    items = [],         ;; [x, y, off, text, life, kind, num, val, bx, by, bw, bh]
+    dur = 60,           ;; duration: 1 s
+    speed = 1.0,        ;; speed: LOGIC_FPS / max_frames_per_sec
+    offset = 48,
+    fade = 0,
+    font = "font_regular",
+]
+
+func ctext.add (s, x, y, kind) {
+    loop _, it in ctext.items {
+        if !it.num && (it.kind == kind) && (it.life <= ctext.dur) && (it.life >= (ctext.dur // 2)) &&
+           (it.x == x) && (it.y == y) && (it.text == s) {
+            return nil
+        }
+    }
+    set ctext.items@+ = [x = x, y = y, off = fl.f32(ctext.offset), text = s, life = ctext.dur,
+                         kind = kind, num = false, val = 0.0, bx = 0, by = 0, bw = 0, bh = 0]
+}
+
+func ctext.add_num (n, x, y, kind) {
+    loop _, it in ctext.items {
+        if it.num && (it.kind == kind) && (it.life == ctext.dur) && (it.x == x) && (it.y == y) {
+            set it.val = fl.f32(it.val + n)
+            set it.text = string.format("%.0f", it.val)
+            return nil
+        }
+    }
+    ctext.add(string.format("%.0f", n), x, y, kind)
+    val last = ctext.items@(#ctext.items - 1)
+    set last.num = true
+    set last.val = n
+}
+
+;; the label of an item at its place on the screen: centered, its bottom
+;; at the place (WidgetLabel::applyOffsets)
+func ctext_place (it, cx, cy) {
+    val sx, sy = fl.map2scr(it.x, it.y, cx, cy)
+    val py = sy - math.floor(it.off)
+    val st = font_style(ctext.font)
+    set it.bw = fl.text_width(st.img, it.text)
+    set it.bh = fl.label_height(st.img, it.text)
+    set it.bx = sx - (it.bw // 2)
+    set it.by = py - it.bh
+}
+
+;; Utils::rectsOverlap: a corner of one inside the other (isWithinRect,
+;; with the right and bottom edges out)
+func ctext_in (r, x, y) {
+    (x >= r.bx) && (y >= r.by) && (x < (r.bx + r.bw)) && (y < (r.by + r.bh))
+}
+func ctext_corner_in (a, b) {
+    ctext_in(b, a.bx, a.by) || ctext_in(b, a.bx + a.bw, a.by) ||
+    ctext_in(b, a.bx, a.by + a.bh) || ctext_in(b, a.bx + a.bw, a.by + a.bh)
+}
+
+func ctext.logic () {
+    val cx, cy = fl.cam()
+    var i = #ctext.items
+    loop {
+        while i > 0
+        set i = i - 1
+        val it = ctext.items@i
+        set it.life = it.life - 1
+        set it.off = fl.f32(it.off + ctext.speed)
+        ctext_place(it, cx, cy)
+        ;; the ones before it, if they overlap, go up above it
+        var k = i
+        loop {
+            while k > 0
+            set k = k - 1
+            val o = ctext.items@k
+            if ctext_corner_in(it, o) || ctext_corner_in(o, it) {
+                set o.off = fl.f32(o.off + (o.bh + (o.by - it.by)))
+                ctext_place(o, cx, cy)
+            }
+        }
+    }
+    loop {
+        while (#ctext.items > 0) && (ctext.items@0.life <= 0)
+        vector.remove(ctext.items, 0)
+    }
+}
+
+func ctext.draw () {
+    if os.getenv("FLARE_NOHUD") {
+        return nil
+    }
+    val st = font_style(ctext.font)
+    loop _, it in ctext.items {
+        if it.life > 0 {
+            val a = if it.life < ctext.fade => math.floor(fl.f32(fl.f32(it.life / ctext.fade) * 255)) => 255
+            fl.label(st.img, it.text, it.bx, it.by, font.color("combat_" ++ it.kind),
+                     st.shadow@0, st.shadow@1, st.blend, a)
+        }
+    }
+}
+
+func ctext.clear () {
+    set ctext.items = []
+}

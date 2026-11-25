@@ -267,6 +267,7 @@ task MapRun (path, pos, h) {
     fl.trace("map " ++ path)
     pin m = map.load(path)
     set hud.map_title = m.title
+    ctext.clear()
     set hud.map_change = true
     set play.next_id = 1
     val p = pos || m.hero
@@ -445,6 +446,7 @@ task MapRun (path, pos, h) {
         }
         loot.logic(hp)
         npc.logic(npcs)
+        ctext.logic()
         ;; checkTeleport: another map ends this one; then checkLog: the
         ;; messages of the hero to the log
         if w.teleport {
@@ -513,6 +515,7 @@ task Play (path, pos, class) {
         fl.map_render()
         fl.ren_clear()          ;; the maps add theirs before the next draw
         hud.draw(h.pub)
+        ctext.draw()
         cursor.draw()
     }
 }

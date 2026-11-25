@@ -314,6 +314,7 @@ func power_effect (t, caster, id, pw) {
                             else => mx
                         }
                         set m = resource_round(m)
+                        ctext.add("+" ++ string.format("%.0f", m) ++ " Shield", dest.x, dest.y, "buff")
                     }
                 }
                 if ok {
@@ -398,6 +399,16 @@ func take_hit (t, hz, src) {
         set dmg = fl.f32(fl.f32(dmg * 0) / 100)
     }
     set dmg = resource_round(dmg)
+    ;; the combat text of the hit (Entity::takeHit)
+    if !pw.ignore_zero_damage {
+        ifs {
+            dmg == 0 => { ctext.add("miss", t.x, t.y, "miss") }
+            t.hero => { ctext.add_num(dmg, t.x, t.y, "takedmg") }
+            crit || overhit => { ctext.add_num(dmg, t.x, t.y, "crit") }
+            missed => { ctext.add_num(dmg, t.x, t.y, "miss") }
+            else => { ctext.add_num(dmg, t.x, t.y, "givedmg") }
+        }
+    }
     if dmg == 0 {
         return false
     }
