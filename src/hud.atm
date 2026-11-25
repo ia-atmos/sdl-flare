@@ -6,7 +6,8 @@
 ;;
 ;; Done: the bars of life, mana, and experience (MenuStatBar), the action
 ;; bar (MenuActionBar), the enemy under the mouse (MenuEnemy), the title
-;; of the region (MenuRegionTitle). Not drawn: tooltips and the
+;; of the region (MenuRegionTitle), the minimap (MenuMiniMap, its zoom of
+;; 1x: the click that turns it to 2x is not ported). Not drawn: tooltips and the
 ;; labels of hotkeys (hidden by engine/widget_settings.txt).
 
 pin hud = [
@@ -19,6 +20,11 @@ pin hud = [
     enemy = nil,        ;; the enemy shown, set :out (nil when it ends)
     region = nil,       ;; MenuRegionTitle: its label, title, alpha, timers
     map_title = "",     ;; the title of the map (MapRenderer::title)
+    mini = nil,         ;; MenuMiniMap: its menu, colors, zoom, button
+    map_change = false, ;; a new map: the minimap is drawn again
+    ens = nil,          ;; the enemies of the map, set :out by MapRun
+    npcs = nil,         ;; the NPCs of the map, set :out by MapRun
+    events = nil,       ;; the events of the map, set :out by MapRun
 ]
 
 ;; Utils::alignToScreenEdge of a rect of a menu
@@ -130,6 +136,37 @@ func hud.init () {
         }
     }
     set hud.region = r
+    ;; MenuMiniMap: menus/minimap.txt
+    val mm = hud.menu("menus/minimap.txt")
+    val mi = [x = mm.x, y = mm.y, w = mm.w, h = mm.h, bg = nil, pos = [0, 0, 0, 0],
+              label = hud.label_info(["0", "0", "left", "top"]), zoom = 1, button = nil,
+              wall = 0x808080, obst = 0x404040, hero = 0xFFFFFF, enemy = 0xFF0000,
+              ally = 0xFFFF00, npc = 0x00FF00, teleport = 0x00BFFF]
+    loop _, kv in mm.keys {
+        val k, v = kv@0, kv@1
+        val l = parse.list(v)
+        match k {
+            "background" => { set mi.bg = v }
+            "map_pos" => { set mi.pos = [parse.int(l@0), parse.int(l@1), parse.int(l@2), parse.int(l@3)] }
+            "text_pos" => { set mi.label = hud.label_info(l) }
+            "default_zoom_level" => { set mi.zoom = parse.int(v) }
+            "button_config" => { set mi.button = [mi.x + parse.int(l@0), mi.y + parse.int(l@1)] }
+            "color_wall" => { set mi.wall = hud.rgb(l) }
+            "color_obst" => { set mi.obst = hud.rgb(l) }
+            "color_hero" => { set mi.hero = hud.rgb(l) }
+            "color_enemy" => { set mi.enemy = hud.rgb(l) }
+            "color_ally" => { set mi.ally = hud.rgb(l) }
+            "color_npc" => { set mi.npc = hud.rgb(l) }
+            "color_teleport" => { set mi.teleport = hud.rgb(l) }
+        }
+    }
+    ;; visible_radius
+    set mi.radius = fl.f32(fl.f32(math.max(mi.pos@2, mi.pos@3)) * fl.f32(0.7071))
+    set hud.mini = mi
+}
+
+func hud.rgb (l) {
+    (parse.int(l@0) << 16) | (parse.int(l@1) << 8) | parse.int(l@2)
 }
 
 ;; Parse::popLabelInfo: x, y, justify, valign, style
@@ -312,6 +349,101 @@ func hud.draw_region () {
     }
 }
 
+;; MenuMiniMap::render(hero_pos): the background, the title of the map,
+;; the tiles and the entities around the hero, the compass, the button
+func hud.draw_mini (h) {
+    val m = hud.mini
+    if hud.map_change {
+        fl.mm_prerender(m.zoom, m.pos@2, m.pos@3, m.wall, m.obst)
+        set hud.map_change = false
+    }
+    if m.bg {
+        fl.part(hud.image(m.bg), 0, 0, m.w, m.h, m.x, m.y)
+    }
+    val l = m.label
+    font.label(l.style, hud.map_title, m.x + l.x, m.y + l.y, l.justify, l.valign, font.color("menu_normal"))
+    ;; renderMapSurface: the hero at a whole tile
+    val z = m.zoom
+    val hx, hy = math.floor(h.x), math.floor(h.y)
+    val mw, mh = fl.map_size()
+    val mx = math.max(mw, mh)
+    val ox = (z * (hx - hy + mx)) - (m.pos@2 // 2)
+    val oy = (z * (hx + hy)) - (m.pos@3 // 2)
+    fl.mm_clear()
+    hud.mini_entities(h, m, ox, oy, mw, mh)
+    fl.mm_draw(ox, oy, m.pos@2, m.pos@3, m.x + m.pos@0, m.y + m.pos@1)
+    val c = hud.image("images/menus/compass_iso.png")
+    val cw, _ = fl.size(c)
+    fl.draw(c, m.x + m.pos@0 + m.pos@2 - cw, m.pos@1 + m.y)
+    ;; WidgetButton: its row by its state (normal, pressed, hover, disabled)
+    if m.button {
+        val b = hud.image("images/menus/buttons/button_config.png")
+        val bw, bh4 = fl.size(b)
+        val bh = bh4 // 4
+        val mxs, mys = fl.mouse()
+        val hover = (mxs >= m.button@0) && (mys >= m.button@1) && (mxs < (m.button@0 + bw)) && (mys < (m.button@1 + bh))
+        val row = ifs {
+            h.corpse => 3
+            hover => 2
+            else => 0
+        }
+        fl.part(b, 0, row * bh, bw, bh, m.button@0, m.button@1)
+    }
+}
+
+;; MenuMiniMap::fillEntities: the hero, the NPCs and the teleports of the
+;; events, the enemies in combat, the allies, the corpses that block
+func hud.mini_entities (h, m, ox, oy, mw, mh) {
+    val hx, hy = math.floor(h.x), math.floor(h.y)
+    if (hx >= 0) && (hy >= 0) && (hx < mw) && (hy < mh) {
+        fl.mm_entity(hx, hy, ox, oy, m.hero)
+    }
+    loop _, ev in hud.events || [] {
+        val tele = (ev.activate == ACTIVATE.on_trigger) || (ev.activate == ACTIVATE.on_interact)
+        var inter = false
+        loop _, c in ev.comps {
+            if c.type == "intermap" {
+                set inter = true
+            }
+        }
+        if tele && inter && event_active(ev, h) {
+            loop j in (ev.loc@0, ev.loc@0 + ev.loc@2 - 1) {
+                loop k in (ev.loc@1, ev.loc@1 + ev.loc@3 - 1) {
+                    if fl.dist(h.x, h.y, j, k) <= m.radius {
+                        fl.mm_entity(j, k, ox, oy, m.teleport)
+                    }
+                }
+            }
+        }
+    }
+    ;; the events of the NPCs (NPCManager::createMapEvent), after those of
+    ;; the map: at the tile of the NPC
+    loop _, n in hud.npcs || [] {
+        val nx, ny = math.floor(n.x), math.floor(n.y)
+        if fl.dist(h.x, h.y, nx, ny) <= m.radius {
+            fl.mm_entity(nx, ny, ox, oy, m.npc)
+        }
+    }
+    loop _, t in hud.ens || [] {
+        val e = t.pub
+        if e.hp > 0 {
+            if e.hero_ally {
+                if fl.dist(h.x, h.y, e.x, e.y) <= m.radius {
+                    fl.mm_entity(math.floor(e.x), math.floor(e.y), ox, oy, m.ally)
+                }
+            } else {
+                if e.in_combat && (fl.dist(h.x, h.y, e.x, e.y) <= m.radius) {
+                    fl.mm_entity(math.floor(e.x), math.floor(e.y), ox, oy, m.enemy)
+                }
+            }
+        } else {
+            if e.corpse_has_collision && (fl.dist(h.x, h.y, e.x, e.y) <= m.radius) {
+                fl.mm_entity(math.floor(e.x), math.floor(e.y), ox, oy, m.obst)
+            }
+        }
+    }
+}
+
 ;; MenuEnemy::render: the background, the fill of its life, its name and
 ;; level, and its life (or Dead, or Destroyed)
 func hud.draw_enemy () {
@@ -360,6 +492,7 @@ func hud.draw (h) {
     if os.getenv("FLARE_NOHUD") {
         return nil
     }
+    hud.draw_mini(h)
     hud.region_title(hud.map_title)
     loop _, b in hud.stats {
         hud.draw_stat(b)

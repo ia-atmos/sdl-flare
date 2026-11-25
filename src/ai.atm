@@ -554,6 +554,7 @@ task Enemy (st, me) {
         name = st.name, x = fl.f32(me.x), y = fl.f32(me.y), dir = me.dir,
         hp = st.hp, hp_max = st.hp, mp = st.mp, base = st.base, speed = st.speed, xp = st.xp,
         level = st.level, suppress_hp = st.suppress_hp, lifeform = st.lifeform,
+        hero_ally = false, corpse_has_collision = st.corpse_has_collision,
         state = if me.state == "spawn" => STATE.SPAWN => STATE.STANCE, movement = st.movement,
         melee_range = st.melee_range, threat_range = st.threat_range,
         threat_range_far = st.threat_range_far, flee_range = st.flee_range,

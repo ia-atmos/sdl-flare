@@ -267,6 +267,7 @@ task MapRun (path, pos, h) {
     fl.trace("map " ++ path)
     pin m = map.load(path)
     set hud.map_title = m.title
+    set hud.map_change = true
     set play.next_id = 1
     val p = pos || m.hero
     set hp.x, hp.y = fl.f32(p@0), fl.f32(p@1)
@@ -279,6 +280,7 @@ task MapRun (path, pos, h) {
     set play.world = play_world()
     val w = play.world
     set play.events = event.load(m)
+    set :out hud.events = play.events
     ;; MapRenderer::load: the groups of enemies
     pin placed = enemy.place(enemy.groups(m))
     ;; the events on load
@@ -287,6 +289,7 @@ task MapRun (path, pos, h) {
     fl.rand()
     pin es = tasks()
     pin ens = []                ;; the enemies in order, as EntityManager
+    set :out hud.ens = ens
     loop _, me in placed {
         val t = spawn @es Enemy(enemy.stats(me.type), me)
         set ens@+ = t
@@ -295,6 +298,7 @@ task MapRun (path, pos, h) {
     play.new_map_draws(p@0, p@1, true)
     ;; NPCManager::handleNewMap, after the enemies
     pin npcs = npc.load(m)
+    set :out hud.npcs = npcs
     set combat.list = []
     set loot.ground = []
     set loot.map = []
