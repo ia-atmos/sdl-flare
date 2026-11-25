@@ -21,7 +21,7 @@ Last review: 2026-11-18, through the whole conversation.
 | #8 | F8 and F9 (the Empyrean Campaign) | open, work |
 | #9 | A leak of 132 KB at the end of the game | closed: gone |
 | #10 | `await(n, :e)` may replace the task `Frames` | closed: done |
-| #11 | Move the platform layer to `ia-atmos/env-sdl` | open, work (branch `env-sdl`) |
+| #11 | Move the platform layer to `ia-atmos/env-sdl` | done on the branch `env-sdl`; waiting: #11a |
 | #12 | The three items of the plan settled as recommended | reported, not acknowledged |
 | #13 | Scope of F5 by the data of the alpha demo | reported, not acknowledged |
 | #14 | Options added to the patch of the original | reported, not acknowledged |
@@ -134,8 +134,15 @@ migrations (no module keeps an entity).
 #10 Closed: the task `Frames` is gone; its one use is `await(10, :frame)`.
 The counters of frames of the game are timers of the original, kept.
 
-#11 Asked by env-sdl on 2026-11-25 (Flare is its E6): started on the
-branch `env-sdl`, from 8163dec. Move the platform part of the layer (window,
+#11 Asked by env-sdl on 2026-11-25 (Flare is its E6): done on the branch
+`env-sdl` (f724aae, from 6e79237, over env-sdl 48e1d50): the 38 runs, the
+data, and the screenshots identical; what does not fit was sent to
+env-sdl (an image converted from C, the mouse of the software path, fonts
+with a style). Asked through atmos:
+- #11a (recommended) merge it into `main`; a checkout of env-sdl is then
+  needed beside this one.
+- #11b keep it as a branch until env-sdl settles what does not fit.
+The plan was: move the platform part of the layer (window,
 images, fonts, sounds, input, the test mode of `engine/flare.h` and
 `engine/engine.atm`) to `ia-atmos/env-sdl` (Flare third, after Pingus and
 SNKRX), with the golden outputs identical; the game part (`astar.h`,
