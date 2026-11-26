@@ -29,6 +29,8 @@ Last review: 2026-11-18, through the whole conversation.
 | #16 | The experiment of a per-map context (branch `exp-map-context`) | closed: #16c, confirmed (2026-11-21) |
 | #17 | Event powers (traps) are queued and never activated | closed: done |
 | #18 | Other reports: `until` of the compiler, the corrupted golden, the permission to install | reported, not acknowledged |
+| #19 | Excerpt, idiomatic (HUD): `set :out hud.enemy` (src/hud.atm:259) | reported |
+| #20 | Excerpt, bad (HUD): an entry removed by hand in a `defer` (src/effect.atm:103) | reported |
 
 ## A. Waiting for an answer of the author
 
@@ -193,3 +195,23 @@ golden output of the runs was committed corrupted once (two writers) and
 restored in `fe3e438`, and the suite and its update now run one after the
 other; the permission to install packages (SDL2 development files,
 `time`) was asked and given at the start.
+
+## D. Excerpts of Atmos shown to the author
+
+The rule of the author of 2026-11-26 (through atmos): for each group of
+changes, an idiomatic excerpt and a bad one, numbered, the bad one with
+why.
+
+#19 (HUD, idiomatic) `src/hud.atm:259-265`: the HUD refers to the enemy
+of a map with `set :out hud.enemy = e`; the place returns to nil when the
+enemy or its map ends, where the original clears the pointer by hand
+(MenuEnemy::handleNewMap).
+
+#20 (HUD, bad) `src/effect.atm:103-115`: an effect task inserts its icon
+in a list of its entity and, in a `defer`, finds it by identity to remove
+it: ten lines for "this entry lives as long as this task", repeated three
+times in that task (animation, shield, icon). Why: a pool cannot be read
+in order except as tasks, so the menu needs the list. What would help: a
+removal by value in `vector` (the language), or a list whose entry ends
+with its owner (`set :out` for an element of a vector).
+
