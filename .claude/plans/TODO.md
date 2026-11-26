@@ -34,6 +34,7 @@ Last review: 2026-11-18, through the whole conversation.
 | #21 | Answer to the general instruction of 2026-11-26 (freedom, idioms, files, bugs) | answered, grade 5/10 |
 | #22 | Excerpt, idiomatic (`@name`): `l@o` (src/hud.atm:106) | reported |
 | #23 | Excerpt, bad (`@name`): `emit @(task) :e`, now `emit :e` (src/hero.atm:568) | reported |
+| #24 | The idioms of IDIOMS.md (atmos#29) applied to the port | open, with #21 (b) |
 
 ## A. Waiting for an answer of the author
 
@@ -243,4 +244,10 @@ per manager where a task or a table reads better, the C that is game
 logic (path finding, collision, geometry) moved to Atmos with a
 measurement of its cost; the float32 rounding stays (observable: it
 moves the entities). (c) 5/10.
+
+#24 The idioms of `ia-atmos/lang` `.claude/plans/IDIOMS.md` (the standing
+rule of the author, atmos#29, 2026-11-26: read before writing Atmos).
+Against the port: `loop _ in n` and `emit(...)`, `await(...)` with
+parentheses are to be rewritten, with the rework of #21 (b), when the
+work resumes.
 
