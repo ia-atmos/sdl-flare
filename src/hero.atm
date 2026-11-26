@@ -565,7 +565,7 @@ task Hero (st, pos) {
                 set h.camera_lock = false
             }
         }
-        emit @(task) :hero.prologue
+        emit :hero.prologue
         if !h.stun {
             ;; the action queue: a power, if in stance or moving
             loop _, a in h.actions {
@@ -576,7 +576,7 @@ task Hero (st, pos) {
                 }
             }
             set h.actions = []
-            emit @(task) :hero.step
+            emit :hero.step
         }
         fl.cam_target(h.x, h.y)
         ;; MapRenderer::checkEvents at the hero

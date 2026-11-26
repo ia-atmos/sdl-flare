@@ -637,7 +637,7 @@ task Enemy (st, me) {
                 ai_check_move(e, hero_st)
                 ;; updateState
                 anim.advance(e.cur)
-                emit @(task) :enemy.step
+                emit :enemy.step
             }
             set e.fleeing = false
           }
