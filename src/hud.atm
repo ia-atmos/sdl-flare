@@ -103,7 +103,7 @@ func hud.init () {
                 else => 11
             }
             val o = if k == "slot" => 1 => 0
-            set slots@i = [m.x + parse.int(l@(o)), m.y + parse.int(l@(o + 1))]
+            set slots@i = [m.x + parse.int(l@o), m.y + parse.int(l@(o + 1))]
         }
     }
     set hud.bar = [x = m.x, y = m.y, w = m.w, h = m.h, slots = slots]
