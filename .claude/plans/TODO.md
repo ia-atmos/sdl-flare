@@ -31,6 +31,7 @@ Last review: 2026-11-18, through the whole conversation.
 | #18 | Other reports: `until` of the compiler, the corrupted golden, the permission to install | reported, not acknowledged |
 | #19 | Excerpt, idiomatic (HUD): `set :out hud.enemy` (src/hud.atm:259) | reported |
 | #20 | Excerpt, bad (HUD): an entry removed by hand in a `defer` (src/effect.atm:103) | reported |
+| #21 | Answer to the general instruction of 2026-11-26 (freedom, idioms, files, bugs) | answered, grade 5/10 |
 
 ## A. Waiting for an answer of the author
 
@@ -214,4 +215,22 @@ times in that task (animation, shield, icon). Why: a pool cannot be read
 in order except as tasks, so the menu needs the list. What would help: a
 removal by value in `vector` (the language), or a list whose entry ends
 with its owner (`set :out` for an element of a vector).
+
+## E. The general instruction of 2026-11-26 (pico-1oom#29, through atmos)
+
+#21 Answered to the author: (a) followed in part: entities, powers,
+hazards, effects are tasks (not state machines), but much of the port
+keeps the shape of the original (functions named and ordered as its
+methods, 93 comments of Class::method, timers as `[cur, dur]` records, a
+module per manager), 1933 of 8069 lines are C (map, collision, path
+finding, geometry, minimap, texts), no lambdas, many index loops; files:
+it writes none, reads only the data of the original (the exception);
+bugs: none of the kind of item 4 found yet, none recorded. (b) To redo,
+guarded by the 38 runs and the screenshots: the menus of the HUD as
+tasks (a title that awaits its fades, a combat text that floats in its
+own task), the lists kept by hand (#20) and the index loops, the module
+per manager where a task or a table reads better, the C that is game
+logic (path finding, collision, geometry) moved to Atmos with a
+measurement of its cost; the float32 rounding stays (observable: it
+moves the entities). (c) 5/10.
 
