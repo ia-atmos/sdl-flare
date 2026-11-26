@@ -32,6 +32,8 @@ Last review: 2026-11-18, through the whole conversation.
 | #19 | Excerpt, idiomatic (HUD): `set :out hud.enemy` (src/hud.atm:259) | reported |
 | #20 | Excerpt, bad (HUD): an entry removed by hand in a `defer` (src/effect.atm:103) | reported |
 | #21 | Answer to the general instruction of 2026-11-26 (freedom, idioms, files, bugs) | answered, grade 5/10 |
+| #22 | Excerpt, idiomatic (`@name`): `l@o` (src/hud.atm:106) | reported |
+| #23 | Excerpt, bad (`@name`): `emit @(task) :e`, now `emit :e` (src/hero.atm:568) | reported |
 
 ## A. Waiting for an answer of the author
 
@@ -215,6 +217,14 @@ times in that task (animation, shield, icon). Why: a pool cannot be read
 in order except as tasks, so the menu needs the list. What would help: a
 removal by value in `vector` (the language), or a list whose entry ends
 with its owner (`set :out` for an element of a vector).
+
+#22 (`@(name)` to `@name`, idiomatic) `src/hud.atm:106`: `parse.int(l@o)`,
+an index by a plain name with no parentheses (4e542fd).
+
+#23 (`@(name)` to `@name`, bad) `src/hero.atm:568`, before 374803e:
+`emit @(task) :hero.prologue`. Why: it names the default target of an
+emit with parentheses, and `@task` cannot be written (`task` is a
+keyword). Helped by the decision of the author: `emit :e`.
 
 ## E. The general instruction of 2026-11-26 (pico-1oom#29, through atmos)
 
