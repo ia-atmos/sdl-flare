@@ -145,7 +145,7 @@ func event.load (m) {
                     base = [dmg_melee_min = dmin, dmg_melee_max = dmax, dmg_ranged_min = dmin,
                             dmg_ranged_max = dmax, dmg_ment_min = dmin, dmg_ment_max = dmax],
                 ]
-                loop _ in 5 {
+                loop in 5 {
                     percent_f(100)
                 }
             }

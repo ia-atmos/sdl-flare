@@ -44,7 +44,7 @@ func anim_sub (frames, duration) {
     if (frames > 0) && ((duration % frames) == 0) {
         val div = duration // frames
         loop i in frames {
-            loop _ in div {
+            loop in div {
                 set sub@+ = i
             }
         }
@@ -341,7 +341,7 @@ task anim.Loop (a) {
             set pub = 0
         }
     }
-    await(false)
+    await false
 }
 
 ;; A cursor in an animation: the state of `Animation` of the original

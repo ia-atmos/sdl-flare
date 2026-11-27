@@ -81,7 +81,7 @@ func enemy_random (cat, lo, hi) {
                 "rare" => 1
                 else => 0
             }
-            loop _ in n {
+            loop in n {
                 set cs@+ = e
             }
         }
@@ -292,5 +292,5 @@ task Enemy (st, me) {
         name = st.name, x = fl.f32(me.x), y = fl.f32(me.y), dir = me.dir,
         hp = st.hp, speed = st.speed, state = 0,
     ]
-    await(false)
+    await false
 }

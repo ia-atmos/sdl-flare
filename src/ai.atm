@@ -531,7 +531,7 @@ task EDead (e, crit) {
             }
             set e.x = fl.f32(math.floor(e.x / 0.0625) * 0.0625)
             set e.y = fl.f32(math.floor(e.y / 0.0625) * 0.0625)
-            await(false)
+            await false
         }
         await :enemy.step
     }

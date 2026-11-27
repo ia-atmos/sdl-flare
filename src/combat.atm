@@ -156,7 +156,7 @@ func power_activate (id, src, ox, oy, tx0, ty0) {
         "fixed" => {
             if pw.use_hazard {
                 var delay = 0
-                loop _ in pw.count {
+                loop in pw.count {
                     ;; created in the queue of the module, which owns it
                     val hz = vector.insert(combat.new, hazard_new(id, pw, src, ox, oy, tx, ty))
                     set :out hz.src = src
@@ -256,7 +256,7 @@ func power_activate (id, src, ox, oy, tx0, ty0) {
             }
             val dir = fl.direction(ox, oy, tx, ty)
             fl.col_block(px, py, src.hero)
-            loop _ in pw.count {
+            loop in pw.count {
                 val sp = play_spawn_request([type = pw.spawn_type, x = fl.f32(px), y = fl.f32(py), dir = dir])
                 set :out sp.summoner = src
             }
