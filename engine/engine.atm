@@ -47,18 +47,25 @@ spawn {
         `FL_MOUSE_X = fl_int($x); FL_MOUSE_Y = fl_int($y);`
     }
 }
+;; a press or a release of a button: the left one is MAIN1, the right one
+;; MAIN2 (the bindings of SDLInputState)
+func fl_mouse_button (e, down) {
+    val x, y = e.x, e.y
+    val b = match e.button {
+        :left  => 1
+        :right => 3
+        else   => 0
+    }
+    `fl_input_mouse(fl_int($x), fl_int($y), fl_int($b), fl_int($down));`
+}
 spawn {
     loop e on :mouse.button.dn {
-        val x, y = e.x, e.y
-        val b = e.button
-        `fl_input_mouse(fl_int($x), fl_int($y), fl_int($b), 1);`
+        fl_mouse_button(e, 1)
     }
 }
 spawn {
     loop e on :mouse.button.up {
-        val x, y = e.x, e.y
-        val b = e.button
-        `fl_input_mouse(fl_int($x), fl_int($y), fl_int($b), 0);`
+        fl_mouse_button(e, 0)
     }
 }
 
